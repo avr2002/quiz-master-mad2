@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('Home'));</script>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <script src="/js/components/navigation.js"></script>
+            <script>document.write(getAuthNav());</script>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <div class="jumbotron text-center">
+            <h1 class="display-4">Welcome to Quiz Master</h1>
+            <p class="lead">Test your knowledge with our interactive quizzes</p>
+            <hr class="my-4">
+            <p>Get started by logging in or creating a new account</p>
+            <div class="mt-4">
+                <a href="/pages/auth/login.html" class="btn btn-primary btn-lg me-2">Login</a>
+                <a href="/pages/auth/register.html" class="btn btn-secondary btn-lg">Register</a>
+            </div>
+        </div>
+    </main>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+</body>
+
+</html>

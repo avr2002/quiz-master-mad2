@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('Login'));</script>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <!-- Auth Navigation -->
+            <script src="/js/components/navigation.js"></script>
+            <script>document.write(getAuthNav());</script>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title mb-0">Login</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="loginForm">
+                            <div class="mb-3">
+                                <div class="form-text mb-2">Login with either Email or Username</div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="email">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="username" class="form-label">Username</label>
+                                        <input type="text" class="form-control" id="username">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Login</button>
+                        </form>
+                    </div>
+                    <div class="card-footer text-center">
+                        <p class="mb-0">Don't have an account? <a href="/pages/auth/register.html">Register</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+    <script src="/js/auth.js"></script>
+</body>
+
+</html>

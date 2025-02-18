@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('Welcome'));</script>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <script src="/js/components/navigation.js"></script>
+            <script>
+                const userRole = localStorage.getItem('userRole');
+                const userName = localStorage.getItem('userName');
+                document.write(
+                    userRole === 'admin'
+                        ? getAdminNav(userName)
+                        : getUserNav(userName)
+                );
+            </script>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <div class="card">
+            <div class="card-body text-center">
+                <h1>Hello, <span id="userName">User</span>!</h1>
+                <p>You have successfully logged in.</p>
+                <button onclick="logout()" class="btn btn-danger">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+    <script>
+        // Check if user is authenticated
+        if (!isAuthenticated()) {
+            window.location.href = '/pages/auth/login.html';
+        }
+    </script>
+</body>
+
+</html>
