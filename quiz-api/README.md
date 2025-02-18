@@ -2,8 +2,9 @@
 
 ## Setup
 
-1. Create a `.env` file based on `.env.example`
-2. Create a virtual environment and install the dependencies
+1. `cd quiz-api`
+2. Create a `.env` file based on `.env.example`
+3. Create a virtual environment and install the dependencies
 
     ```bash
     uv venv
@@ -14,7 +15,7 @@
     source .venv/bin/activate
     make install
     ```
-3. Run the app
+4. Run the app
 
     ```bash
     make run
