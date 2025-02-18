@@ -13,8 +13,8 @@ function install {
 # run the Flask application
 function run {
     try-load-dotenv || true
-    uv run -m quiz_api.main
-    # uv run -- gunicorn quiz_api.main:app --reload
+    # uv run -m quiz_api.main
+    uv run -- gunicorn quiz_api.main:app --reload
 }
 
 

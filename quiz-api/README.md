@@ -1,6 +1,27 @@
 # Quiz API
 
-### TODO
+## Setup
+
+1. Create a `.env` file based on `.env.example`
+2. Create a virtual environment and install the dependencies
+
+    ```bash
+    uv venv
+    uv sync
+
+    # OR
+    python -m venv .venv
+    source .venv/bin/activate
+    make install
+    ```
+3. Run the app
+
+    ```bash
+    make run
+    ```
+
+
+## TODO
 
 - [ ] Add Pydantic Validation Tests
 - [ ] Update OpenAPI schema and docs, if required
