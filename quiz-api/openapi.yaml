@@ -1,0 +1,528 @@
+# GPT generated: Might be not correct
+openapi: 3.0.3
+info:
+  title: Quiz API
+  description: A RESTful API for managing quizzes and user progress
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          minLength: 3
+          maxLength: 80
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+          minLength: 1
+        role:
+          type: string
+          enum: [admin, user]
+        dob:
+          type: string
+          format: date
+          description: Date of birth in DD/MM/YYYY format
+        joined_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    Subject:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          minLength: 3
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    Quiz:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        chapter_id:
+          type: integer
+        date_of_quiz:
+          type: string
+          format: date-time
+        time_duration:
+          type: string
+          description: Format HH:MM
+        remarks:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    QuizCreate:
+      type: object
+      required: [chapter_id, date_of_quiz, time_duration]
+      properties:
+        chapter_id:
+          type: integer
+        date_of_quiz:
+          type: string
+          format: date-time
+        time_duration:
+          type: string
+          description: Format HH:MM
+        remarks:
+          type: string
+
+    Question:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        quiz_id:
+          type: integer
+        question_statement:
+          type: string
+        option1:
+          type: string
+        option2:
+          type: string
+        option3:
+          type: string
+        option4:
+          type: string
+        correct_option:
+          type: integer
+          minimum: 1
+          maximum: 4
+        points:
+          type: integer
+          default: 1
+
+    Score:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        quiz_id:
+          type: integer
+        user_id:
+          type: integer
+        total_score:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+          readOnly: true
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password, email, full_name]
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                password:
+                  type: string
+                  minLength: 6
+                email:
+                  type: string
+                  format: email
+                full_name:
+                  type: string
+                dob:
+                  type: string
+                  description: DD/MM/YYYY format
+                role:
+                  type: string
+                  enum: [user]
+      responses:
+        "201":
+          description: User registered successfully
+        "400":
+          description: Validation error or user already exists
+
+  /auth/login:
+    post:
+      summary: Login to get access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  user:
+                    $ref: "#/components/schemas/User"
+        "401":
+          description: Invalid credentials
+
+  /auth/me:
+    get:
+      summary: Get current user details
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+
+  /admin/users:
+    get:
+      summary: Get all users (Admin only)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: List of all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "403":
+          description: Unauthorized - Admin access required
+
+  /admin/users/{user_id}:
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Get user details by ID (Admin only)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: User not found
+    delete:
+      summary: Delete a user (Admin only)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User deleted successfully
+        "404":
+          description: User not found
+    patch:
+      summary: Update user details (Admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                full_name:
+                  type: string
+                dob:
+                  type: string
+                  description: DD/MM/YYYY format
+      responses:
+        "200":
+          description: User updated successfully
+        "400":
+          description: Validation error
+        "404":
+          description: User not found
+
+  /subjects:
+    get:
+      summary: Get all subjects
+      responses:
+        "200":
+          description: List of all subjects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subject"
+    post:
+      summary: Create a new subject (Admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, description]
+              properties:
+                name:
+                  type: string
+                  minLength: 3
+                description:
+                  type: string
+
+  /chapters/{chapter_id}/quizzes:
+    parameters:
+      - name: chapter_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Get all quizzes in a chapter
+      responses:
+        "200":
+          description: List of quizzes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Quiz"
+        "404":
+          description: Chapter not found
+    post:
+      summary: Create a new quiz (Admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizCreate"
+      responses:
+        "201":
+          description: Quiz created successfully
+        "404":
+          description: Chapter not found
+
+  /quizzes/{quiz_id}:
+    parameters:
+      - name: quiz_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Get quiz details
+      responses:
+        "200":
+          description: Quiz details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Quiz"
+        "404":
+          description: Quiz not found
+    patch:
+      summary: Update quiz details (Admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                time_duration:
+                  type: string
+                  description: Format HH:MM
+                remarks:
+                  type: string
+      responses:
+        "200":
+          description: Quiz updated successfully
+        "404":
+          description: Quiz not found
+    delete:
+      summary: Delete a quiz (Admin only)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Quiz deleted successfully
+        "404":
+          description: Quiz not found
+
+  /quizzes/{quiz_id}/questions:
+    parameters:
+      - name: quiz_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Get all questions in a quiz
+      responses:
+        "200":
+          description: List of questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Question"
+        "404":
+          description: Quiz not found
+    post:
+      summary: Add a question to quiz (Admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                [
+                  question_statement,
+                  option1,
+                  option2,
+                  option3,
+                  option4,
+                  correct_option,
+                ]
+              properties:
+                question_statement:
+                  type: string
+                option1:
+                  type: string
+                option2:
+                  type: string
+                option3:
+                  type: string
+                option4:
+                  type: string
+                correct_option:
+                  type: integer
+                  minimum: 1
+                  maximum: 4
+                points:
+                  type: integer
+                  default: 1
+      responses:
+        "201":
+          description: Question added successfully
+        "404":
+          description: Quiz not found
+
+  /quizzes/{quiz_id}/attempt:
+    parameters:
+      - name: quiz_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      summary: Submit quiz attempt
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [answers]
+              properties:
+                answers:
+                  type: array
+                  items:
+                    type: object
+                    required: [question_id, selected_option]
+                    properties:
+                      question_id:
+                        type: integer
+                      selected_option:
+                        type: integer
+                        minimum: 1
+                        maximum: 4
+      responses:
+        "200":
+          description: Quiz attempt submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_score:
+                    type: integer
+                  max_score:
+                    type: integer
+                  percentage:
+                    type: number
+                    format: float
+        "400":
+          description: Invalid answers format
+        "404":
+          description: Quiz not found
