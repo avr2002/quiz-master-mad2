@@ -154,7 +154,7 @@ def test_register_with_invalid_data_format(client: FlaskClient) -> None:
             "password": "short",  # too short password
             "full_name": "",  # empty full name
             "email": "invalid-email",  # invalid email format
-            "dob": "2024-01-01",  # wrong date format, should be DD/MM/YYYY
+            "dob": "2024-01/01",  # wrong date format, should be DD/MM/YYYY OR DD-MM-YYYY
             "role": "invalid_role",  # invalid role
         },
     )
@@ -167,7 +167,7 @@ def test_register_with_invalid_data_format(client: FlaskClient) -> None:
     assert "String should have at least 6 characters" in errors  # password
     assert "String should have at least 1 character" in errors  # full_name
     assert "value is not a valid email address: An email address must have an @-sign." in errors
-    assert "Value error, Invalid date format. Use DD/MM/YYYY" in errors
+    assert "Value error, Invalid date format. Use DD/MM/YYYY or DD-MM-YYYY or YYYY-MM-DD or YYYY/MM/DD" in errors
     assert "String should match pattern '^(admin|user)$'" in errors  # role
 
 

@@ -14,6 +14,6 @@ sys.path.insert(0, str(THIS_DIR.parent))
 # "pytest_plugins" is a list of plugins/import paths that will be automatically loaded by pytest.
 # Also we do not need to add __init__.py files in the fixtures directory.
 pytest_plugins = [
-    "tests.fixtures.mocked_sqlite",
     "tests.fixtures.api_client",
+    "tests.fixtures.mocked_sqlite",
 ]

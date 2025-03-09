@@ -50,8 +50,10 @@ class TestConfig(Config):
     """Test configuration."""
 
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
-    JWT_SECRET_KEY = "test-secret-key"
+    # Use a shared in-memory database
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"  # "sqlite:///:memory:?cache=shared&uri=true"
+    SECRET_KEY = "test-secret-key"
+    JWT_SECRET_KEY = "test-jwt-secret-key"
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(seconds=1)  # Short expiry for tests
 
 
@@ -61,7 +63,7 @@ class DevelopmentConfig(Config):
     DEBUG = True
     SQLITE_DB_DIR = str(ROOT_DIR / "database" / "quiz_master.db")
     SQLALCHEMY_DATABASE_URI = f"sqlite:///{SQLITE_DB_DIR}"
-    SQLALCHEMY_ECHO = False  # Set True to Log SQL queries
+    SQLALCHEMY_ECHO = True  # Set True to Log SQL queries
 
 
 class ProductionConfig(Config):

@@ -1,8 +1,9 @@
 from datetime import (
     date,
     datetime,
+    timezone,
 )
-
+import os
 import pytest
 from flask.testing import FlaskClient
 from werkzeug.security import generate_password_hash
@@ -16,17 +17,22 @@ from quiz_api.models.models import (
     Subject,
     User,
 )
+from quiz_api.utils.fts import setup_fts
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="function")
 def setup_database(client: FlaskClient):
     """Setup test database before each test and cleanup after."""
-    app = client.application  # Get app from test client
-    with app.app_context():
-        db.create_all()
-        yield db.session  # Yield the session to keep it open during tests
-        db.session.remove()
-        db.drop_all()
+    # We're already in app context from client fixture
+    # db.session.remove()
+    # db.drop_all()
+    db.create_all()
+    setup_fts()
+    
+    yield db.session
+    
+    db.session.remove()
+    db.drop_all()
 
 
 @pytest.fixture
@@ -81,7 +87,7 @@ def chapter(setup_database, subject: Subject) -> Chapter:
 @pytest.fixture
 def quiz(setup_database, chapter: Chapter) -> Quiz:
     """Create a test quiz."""
-    quiz: Quiz = Quiz(chapter_id=chapter.id, date_of_quiz=datetime.now(), time_duration="01:00", remarks="Test quiz")
+    quiz: Quiz = Quiz(chapter_id=chapter.id, date_of_quiz=datetime.now(timezone.utc), time_duration="01:00", remarks="Test quiz")
     setup_database.add(quiz)
     setup_database.commit()
     return quiz
@@ -108,7 +114,7 @@ def question(setup_database, quiz: Quiz) -> Question:
 @pytest.fixture
 def score(setup_database, quiz: Quiz, regular_user: User) -> Score:
     """Create a test score."""
-    score: Score = Score(quiz_id=quiz.id, user_id=regular_user.id, total_score=2, timestamp=datetime.utcnow())
+    score: Score = Score(quiz_id=quiz.id, user_id=regular_user.id, total_score=2, timestamp=datetime.now(timezone.utc))
     setup_database.add(score)
     setup_database.commit()
     return score
