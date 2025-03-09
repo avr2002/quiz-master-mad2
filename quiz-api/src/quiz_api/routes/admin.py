@@ -18,7 +18,8 @@ from flask_jwt_extended import (
 
 from quiz_api.models.database import db
 from quiz_api.models.models import User
-from quiz_api.models.schemas import UserUpdateSchema
+from quiz_api.models.schemas import SearchSchema, UserUpdateSchema
+from quiz_api.utils.search import search_users
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin/users")
 
@@ -133,3 +134,61 @@ def update_user(user_id: int) -> ResponseReturnValue:
 
     except ValueError as e:
         return jsonify({"message": str(e)}), HTTPStatus.BAD_REQUEST
+
+
+@admin_bp.route("/search", methods=[HTTPMethod.GET])
+@jwt_required()
+def search_users_endpoint():
+    """Search users (Admin only)."""
+    # Check if user is admin
+    current_user_id = int(get_jwt_identity())
+    current_user: User | None = db.session.get(User, current_user_id)
+    if not current_user or current_user.role != "admin":
+        return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
+    
+    search_params = SearchSchema(**request.args)
+    query = search_params.q
+    
+    if not query:
+        # Return all users if no query
+        users = User.query.limit(search_params.limit).offset(search_params.offset).all()
+        users_list = [
+            {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "full_name": user.full_name,
+                "role": user.role,
+                "dob": user.dob.strftime("%d/%m/%Y") if user.dob else None,
+                "joined_at": user.joined_at.isoformat(),
+            }
+            for user in users
+        ]
+    else:
+        # Use FTS to search
+        results = search_users(query, limit=search_params.limit, offset=search_params.offset)
+        
+        # Format results
+        users_list = [
+            {
+                "id": row[0],
+                "username": row[1],
+                "password": "********",  # Don't return actual password
+                "full_name": row[2],
+                "dob": row[3] if isinstance(row[3], str) else row[3].strftime("%d/%m/%Y") if row[3] else None,
+                "email": row[4],
+                "role": row[5],
+                "joined_at": row[6] if isinstance(row[6], str) else row[6].isoformat() if row[6] else None,
+            }
+            for row in results
+        ]
+    
+    # Return with metadata
+    response = {
+        "items": users_list,
+        "total": len(users_list),
+        "limit": search_params.limit,
+        "offset": search_params.offset
+    }
+    
+    return jsonify(response), HTTPStatus.OK

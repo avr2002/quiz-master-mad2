@@ -24,7 +24,9 @@ from quiz_api.models.models import (
 from quiz_api.models.schemas import (
     ChapterSchema,
     ChapterUpdateSchema,
+    SearchSchema,
 )
+from quiz_api.utils.search import search_chapters
 
 # Define Blueprint
 chapters_bp = Blueprint("chapters", __name__, url_prefix="/subjects/<int:subject_id>/chapters")
@@ -104,20 +106,16 @@ def get_chapter(subject_id: int, chapter_id: int):
     chapter: Chapter | None = db.session.get(Chapter, chapter_id)
     if not chapter or chapter.subject_id != subject_id:
         return jsonify({"message": "Chapter not found"}), HTTPStatus.NOT_FOUND
-
-    return (
-        jsonify(
-            {
-                "id": chapter.id,
-                "name": chapter.name,
-                "description": chapter.description,
-                "subject_id": chapter.subject_id,
-                "created_at": chapter.created_at.isoformat(),
-                "updated_at": chapter.updated_at.isoformat() if chapter.updated_at else None,
-            }
-        ),
-        HTTPStatus.OK,
-    )
+    
+    response = {
+        "id": chapter.id,
+        "name": chapter.name,
+        "description": chapter.description,
+        "subject_id": chapter.subject_id,
+        "created_at": chapter.created_at.isoformat(),
+        "updated_at": chapter.updated_at.isoformat() if chapter.updated_at else None,
+    }
+    return jsonify(response), HTTPStatus.OK
 
 
 @chapters_bp.route("/<int:chapter_id>", methods=[HTTPMethod.PATCH])
@@ -168,3 +166,59 @@ def delete_chapter(subject_id: int, chapter_id: int):
     db.session.delete(chapter)
     db.session.commit()
     return jsonify({"message": "Chapter deleted successfully"}), HTTPStatus.OK
+
+
+@chapters_bp.route("/search", methods=[HTTPMethod.GET])
+def search_subject_chapters(subject_id: int):
+    """Search chapters within a subject using Full-Text Search."""
+    search_params = SearchSchema(**request.args)
+    query = search_params.q
+    
+    # Check if subject exists
+    subject: Subject | None = db.session.get(Subject, subject_id)
+    if not subject:
+        return jsonify({"message": "Subject not found"}), HTTPStatus.NOT_FOUND
+    
+    if not query:
+        # Return all chapters for this subject if no query
+        chapters = Chapter.query.filter_by(subject_id=subject_id)\
+            .limit(search_params.limit)\
+            .offset(search_params.offset)\
+            .all()
+        chapters_list = [
+            {
+                "id": chapter.id,
+                "name": chapter.name,
+                "description": chapter.description,
+                "subject_id": chapter.subject_id,
+                "created_at": chapter.created_at.isoformat(),
+                "updated_at": chapter.updated_at.isoformat() if chapter.updated_at else None,
+            }
+            for chapter in chapters
+        ]
+    else:
+        # Use FTS to search chapters
+        results = search_chapters(query, limit=search_params.limit, offset=search_params.offset)
+        
+        # Filter results to only include chapters from this subject
+        chapters_list = [
+            {
+                "id": row[0],
+                "name": row[1],
+                "description": row[2],
+                "subject_id": row[3],
+                "created_at": row[4] if isinstance(row[4], str) else row[4].isoformat() if row[4] else None,
+                "updated_at": row[5] if isinstance(row[5], str) else row[5].isoformat() if row[5] else None,
+            }
+            for row in results if row[3] == subject_id
+        ]
+    
+    # Return with metadata
+    response = {
+        "items": chapters_list,
+        "total": len(chapters_list),
+        "limit": search_params.limit,
+        "offset": search_params.offset
+    }
+    
+    return jsonify(response), HTTPStatus.OK

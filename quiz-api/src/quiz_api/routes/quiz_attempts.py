@@ -1,6 +1,6 @@
 """User Management Routes."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from http import (
     HTTPMethod,
     HTTPStatus,
@@ -99,7 +99,7 @@ def submit_quiz(quiz_id: int):
             correct_answers += 1
 
     # Record score
-    score = Score(quiz_id=quiz_id, user_id=current_user_id, total_score=total_score, timestamp=datetime.utcnow())
+    score = Score(quiz_id=quiz_id, user_id=current_user_id, total_score=total_score, timestamp=datetime.now(timezone.utc))
     db.session.add(score)
     db.session.commit()
 

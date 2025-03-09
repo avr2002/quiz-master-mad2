@@ -14,6 +14,23 @@ def setup_fts():
         return
 
     try:
+        # Set up FTS for each entity type
+        setup_subjects_fts()
+        setup_chapters_fts()
+        setup_users_fts()
+        setup_quizzes_fts()
+        
+        current_app.logger.info("FTS setup completed successfully")
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error setting up FTS: {str(e)}")
+        raise
+
+
+def setup_subjects_fts():
+    """Set up FTS for subjects table."""
+    try:
         # Create FTS virtual table for subjects
         db.session.execute(
             text("""
@@ -21,12 +38,13 @@ def setup_fts():
                 name, 
                 description, 
                 content='subjects',
-                content_rowid='id'
+                content_rowid='id',
+                tokenize='porter'
             );
             """)
         )
         
-        # Create triggers to keep FTS table in sync with main table
+        # Create INSERT trigger
         db.session.execute(
             text("""
             CREATE TRIGGER IF NOT EXISTS subjects_ai AFTER INSERT ON subjects
@@ -37,15 +55,7 @@ def setup_fts():
             """)
         )
         
-        db.session.execute(
-            text("""
-            CREATE TRIGGER IF NOT EXISTS subjects_ad AFTER DELETE ON subjects
-            BEGIN
-                DELETE FROM subjects_fts WHERE rowid = old.id;
-            END;
-            """)
-        )
-        
+        # Create UPDATE trigger (DELETE + INSERT workaround for FTS5)
         db.session.execute(
             text("""
             CREATE TRIGGER IF NOT EXISTS subjects_au AFTER UPDATE ON subjects
@@ -57,320 +67,165 @@ def setup_fts():
             """)
         )
         
-        # Populate FTS table with existing data (if any)
+        # Create DELETE trigger
         db.session.execute(
             text("""
-            INSERT OR IGNORE INTO subjects_fts(rowid, name, description)
-            SELECT id, name, description FROM subjects;
+            CREATE TRIGGER IF NOT EXISTS subjects_ad AFTER DELETE ON subjects
+            BEGIN
+                DELETE FROM subjects_fts WHERE rowid = old.id;
+            END;
             """)
         )
         
-        # Create FTS virtual table for chapters
+        # Rebuild FTS index (optional, if you need a full refresh)
         db.session.execute(
-            text("""
+            text("INSERT INTO subjects_fts(subjects_fts) VALUES ('rebuild');")
+        )
+        
+        db.session.commit()
+        current_app.logger.info("Subjects FTS setup completed successfully")
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error setting up subjects FTS: {str(e)}")
+        raise
+
+def setup_chapters_fts():
+    """Set up FTS for chapters table."""
+    try:
+        db.session.execute(text("""
             CREATE VIRTUAL TABLE IF NOT EXISTS chapters_fts USING fts5(
                 name, 
                 description, 
                 content='chapters',
-                content_rowid='id'
+                content_rowid='id',
+                tokenize='porter'
             );
-            """)
-        )
-        
-        # Create triggers for chapters
-        db.session.execute(
-            text("""
+        """))
+
+        db.session.execute(text("""
             CREATE TRIGGER IF NOT EXISTS chapters_ai AFTER INSERT ON chapters
             BEGIN
                 INSERT INTO chapters_fts(rowid, name, description)
                 VALUES (new.id, new.name, new.description);
             END;
-            """)
-        )
-        
-        db.session.execute(
-            text("""
+        """))
+
+        db.session.execute(text("""
             CREATE TRIGGER IF NOT EXISTS chapters_ad AFTER DELETE ON chapters
             BEGIN
                 DELETE FROM chapters_fts WHERE rowid = old.id;
             END;
-            """)
-        )
-        
-        db.session.execute(
-            text("""
+        """))
+
+        db.session.execute(text("""
             CREATE TRIGGER IF NOT EXISTS chapters_au AFTER UPDATE ON chapters
             BEGIN
                 DELETE FROM chapters_fts WHERE rowid = old.id;
                 INSERT INTO chapters_fts(rowid, name, description)
                 VALUES (new.id, new.name, new.description);
             END;
-            """)
-        )
+        """))
+
+        # More efficient index refresh
+        db.session.execute(text("INSERT INTO chapters_fts(chapters_fts) VALUES ('rebuild');"))
         
-        # Populate chapters FTS table
-        db.session.execute(
-            text("""
-            INSERT OR IGNORE INTO chapters_fts(rowid, name, description)
-            SELECT id, name, description FROM chapters;
-            """)
-        )
-        
-        # Create FTS virtual table for users
-        db.session.execute(
-            text("""
+        db.session.commit()
+        current_app.logger.info("Chapters FTS setup completed successfully")
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error setting up chapters FTS: {str(e)}")
+        raise
+
+
+def setup_users_fts():
+    """Set up FTS for users table."""
+    try:
+        db.session.execute(text("""
             CREATE VIRTUAL TABLE IF NOT EXISTS users_fts USING fts5(
                 username, 
                 full_name,
                 email,
                 content='users',
-                content_rowid='id'
+                content_rowid='id',
+                tokenize='porter'
             );
-            """)
-        )
-        
-        # Create triggers for users
-        db.session.execute(
-            text("""
+        """))
+
+        db.session.execute(text("""
             CREATE TRIGGER IF NOT EXISTS users_ai AFTER INSERT ON users
             BEGIN
                 INSERT INTO users_fts(rowid, username, full_name, email)
                 VALUES (new.id, new.username, new.full_name, new.email);
             END;
-            """)
-        )
-        
-        db.session.execute(
-            text("""
+        """))
+
+        db.session.execute(text("""
             CREATE TRIGGER IF NOT EXISTS users_ad AFTER DELETE ON users
             BEGIN
                 DELETE FROM users_fts WHERE rowid = old.id;
             END;
-            """)
-        )
-        
-        db.session.execute(
-            text("""
+        """))
+
+        db.session.execute(text("""
             CREATE TRIGGER IF NOT EXISTS users_au AFTER UPDATE ON users
             BEGIN
                 DELETE FROM users_fts WHERE rowid = old.id;
                 INSERT INTO users_fts(rowid, username, full_name, email)
                 VALUES (new.id, new.username, new.full_name, new.email);
             END;
-            """)
-        )
-        
-        # Populate users FTS table
-        db.session.execute(
-            text("""
-            INSERT OR IGNORE INTO users_fts(rowid, username, full_name, email)
-            SELECT id, username, full_name, email FROM users;
-            """)
-        )
-        
-        # Create FTS virtual table for quizzes
-        db.session.execute(
-            text("""
+        """))
+
+        db.session.execute(text("INSERT INTO users_fts(users_fts) VALUES ('rebuild');"))
+
+        db.session.commit()
+        current_app.logger.info("Users FTS setup completed successfully")
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error setting up users FTS: {str(e)}")
+        raise
+
+
+def setup_quizzes_fts():
+    """Set up FTS for quizzes table."""
+    try:
+        db.session.execute(text("""
             CREATE VIRTUAL TABLE IF NOT EXISTS quizzes_fts USING fts5(
                 remarks,
                 content='quizzes',
-                content_rowid='id'
+                content_rowid='id',
+                tokenize='porter'
             );
-            """)
-        )
-        
-        # Create triggers for quizzes
-        db.session.execute(
-            text("""
+        """))
+
+        db.session.execute(text("""
             CREATE TRIGGER IF NOT EXISTS quizzes_ai AFTER INSERT ON quizzes
             BEGIN
                 INSERT INTO quizzes_fts(rowid, remarks)
-                VALUES (new.id, new.remarks);
+                SELECT new.id, new.remarks WHERE new.remarks IS NOT NULL;
             END;
-            """)
-        )
-        
-        db.session.execute(
-            text("""
+        """))
+
+        db.session.execute(text("""
             CREATE TRIGGER IF NOT EXISTS quizzes_ad AFTER DELETE ON quizzes
             BEGIN
                 DELETE FROM quizzes_fts WHERE rowid = old.id;
             END;
-            """)
-        )
-        
-        db.session.execute(
-            text("""
+        """))
+
+        db.session.execute(text("""
             CREATE TRIGGER IF NOT EXISTS quizzes_au AFTER UPDATE ON quizzes
             BEGIN
                 DELETE FROM quizzes_fts WHERE rowid = old.id;
                 INSERT INTO quizzes_fts(rowid, remarks)
-                VALUES (new.id, new.remarks);
+                SELECT new.id, new.remarks WHERE new.remarks IS NOT NULL;
             END;
-            """)
-        )
-        
-        # Populate quizzes FTS table
-        db.session.execute(
-            text("""
-            INSERT OR IGNORE INTO quizzes_fts(rowid, remarks)
-            SELECT id, remarks FROM quizzes WHERE remarks IS NOT NULL;
-            """)
-        )
-        
+        """))
+
+        db.session.execute(text("INSERT INTO quizzes_fts(quizzes_fts) VALUES ('rebuild');"))
+
         db.session.commit()
-        current_app.logger.info("FTS setup completed successfully")
-        
+        current_app.logger.info("Quizzes FTS setup completed successfully")
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error setting up FTS: {str(e)}")
+        current_app.logger.error(f"Error setting up quizzes FTS: {str(e)}")
         raise
-
-
-def search_subjects(query_text, limit=10, offset=0):
-    """
-    Search subjects using FTS.
-    
-    Args:
-        query_text: The search query text
-        limit: Maximum number of results to return
-        offset: Number of results to skip
-        
-    Returns:
-        List of Subject objects matching the query
-    """
-    if not query_text:
-        return []
-        
-    try:
-        # Use FTS to search subjects
-        result = db.session.execute(
-            text("""
-                SELECT s.* FROM subjects s
-                JOIN subjects_fts fts ON s.id = fts.rowid
-                WHERE subjects_fts MATCH :query
-                ORDER BY rank
-                LIMIT :limit OFFSET :offset
-            """),
-            {"query": query_text, "limit": limit, "offset": offset}
-        ).fetchall()
-        
-        return result
-        
-    except Exception as e:
-        current_app.logger.error(f"Error searching subjects: {str(e)}")
-        return []
-
-
-def search_chapters(query_text, limit=10, offset=0):
-    """
-    Search chapters using FTS.
-    
-    Args:
-        query_text: The search query text
-        limit: Maximum number of results to return
-        offset: Number of results to skip
-        
-    Returns:
-        List of Chapter objects matching the query
-    """
-    if not query_text:
-        return []
-        
-    try:
-        # Use FTS to search chapters
-        result = db.session.execute(
-            text("""
-                SELECT c.* FROM chapters c
-                JOIN chapters_fts fts ON c.id = fts.rowid
-                WHERE chapters_fts MATCH :query
-                ORDER BY rank
-                LIMIT :limit OFFSET :offset
-            """),
-            {"query": query_text, "limit": limit, "offset": offset}
-        ).fetchall()
-        
-        return result
-        
-    except Exception as e:
-        current_app.logger.error(f"Error searching chapters: {str(e)}")
-        return []
-
-
-def search_users(query_text, limit=10, offset=0):
-    """
-    Search users using FTS.
-    
-    Args:
-        query_text: The search query text
-        limit: Maximum number of results to return
-        offset: Number of results to skip
-        
-    Returns:
-        List of User objects matching the query
-    """
-    if not query_text:
-        return []
-        
-    try:
-        # Use FTS to search users
-        result = db.session.execute(
-            text("""
-                SELECT u.* FROM users u
-                JOIN users_fts fts ON u.id = fts.rowid
-                WHERE users_fts MATCH :query
-                ORDER BY rank
-                LIMIT :limit OFFSET :offset
-            """),
-            {"query": query_text, "limit": limit, "offset": offset}
-        ).fetchall()
-        
-        return result
-        
-    except Exception as e:
-        current_app.logger.error(f"Error searching users: {str(e)}")
-        return []
-
-
-def search_quizzes(query_text, limit=10, offset=0, chapter_id=None):
-    """
-    Search quizzes using FTS.
-    
-    Args:
-        query_text: The search query text
-        limit: Maximum number of results to return
-        offset: Number of results to skip
-        chapter_id: Optional chapter ID to filter results
-        
-    Returns:
-        List of Quiz objects matching the query
-    """
-    if not query_text:
-        return []
-        
-    try:
-        # Base query
-        sql_query = """
-            SELECT q.* FROM quizzes q
-            JOIN quizzes_fts fts ON q.id = fts.rowid
-            WHERE quizzes_fts MATCH :query
-        """
-        
-        params = {"query": query_text, "limit": limit, "offset": offset}
-        
-        # Add chapter filter if provided
-        if chapter_id is not None:
-            sql_query += " AND q.chapter_id = :chapter_id"
-            params["chapter_id"] = chapter_id
-        
-        # Add ordering and pagination
-        sql_query += " ORDER BY rank LIMIT :limit OFFSET :offset"
-        
-        # Execute query
-        result = db.session.execute(text(sql_query), params).fetchall()
-        
-        return result
-        
-    except Exception as e:
-        current_app.logger.error(f"Error searching quizzes: {str(e)}")
-        return [] 

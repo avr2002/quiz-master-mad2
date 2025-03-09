@@ -22,9 +22,11 @@ from quiz_api.models.models import (
     User,
 )
 from quiz_api.models.schemas import (
+    SearchSchema,
     QuizSchema,
     QuizUpdateSchema,
 )
+from quiz_api.utils.search import search_quizzes
 
 quiz_bp: Blueprint = Blueprint("quizzes", __name__)
 
@@ -130,3 +132,63 @@ def delete_quiz(quiz_id: int):
     db.session.commit()
 
     return jsonify({"message": "Quiz deleted successfully"}), HTTPStatus.OK
+
+
+@quiz_bp.route("/chapters/<int:chapter_id>/quizzes/search", methods=[HTTPMethod.GET])
+def search_chapter_quizzes(chapter_id: int):
+    """Search quizzes within a chapter using Full-Text Search."""
+    # Check if chapter exists
+    chapter: Chapter | None = db.session.get(Chapter, chapter_id)
+    if not chapter:
+        return jsonify({"message": "Chapter not found"}), HTTPStatus.NOT_FOUND
+    
+    search_params = SearchSchema(**request.args)
+    query = search_params.q
+    
+    if not query:
+        # Return all quizzes for this chapter if no query
+        quizzes = Quiz.query.filter_by(chapter_id=chapter_id).limit(search_params.limit).offset(search_params.offset).all()
+        quizzes_list = [
+            {
+                "id": quiz.id,
+                "chapter_id": quiz.chapter_id,
+                "date_of_quiz": quiz.date_of_quiz.isoformat(),
+                "time_duration": quiz.time_duration,
+                "remarks": quiz.remarks,
+                "created_at": quiz.created_at.isoformat(),
+                "updated_at": quiz.updated_at.isoformat() if quiz.updated_at else None,
+            }
+            for quiz in quizzes
+        ]
+    else:
+        # Use FTS to search quizzes
+        results = search_quizzes(
+            query, 
+            limit=search_params.limit, 
+            offset=search_params.offset,
+            chapter_id=chapter_id
+        )
+        
+        # Format results
+        quizzes_list = [
+            {
+                "id": row[0],
+                "chapter_id": row[1],
+                "date_of_quiz": row[2] if isinstance(row[2], str) else row[2].isoformat() if row[2] else None,
+                "time_duration": row[3],
+                "remarks": row[4],
+                "created_at": row[5] if isinstance(row[5], str) else row[5].isoformat() if row[5] else None,
+                "updated_at": row[6] if isinstance(row[6], str) else row[6].isoformat() if row[6] else None,
+            }
+            for row in results
+        ]
+    
+    # Return with metadata
+    response = {
+        "items": quizzes_list,
+        "total": len(quizzes_list),
+        "limit": search_params.limit,
+        "offset": search_params.offset
+    }
+    
+    return jsonify(response), HTTPStatus.OK

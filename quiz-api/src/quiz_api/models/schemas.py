@@ -15,6 +15,16 @@ from pydantic import (
 )
 
 
+class SearchSchema(BaseModel):
+    """Base schema for search queries."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    q: str = Field("", description="Search query string")
+    limit: int = Field(10, ge=1, le=100, description="Maximum number of results to return")
+    offset: int = Field(0, ge=0, description="Number of results to skip")
+
+
 class UserSchema(BaseModel):
     """Schema for user data validation."""
 
