@@ -25,7 +25,7 @@ from werkzeug.security import (
 
 from quiz_api.models.database import db
 from quiz_api.models.models import User
-from quiz_api.models.schemas import UserSchema
+from quiz_api.models.schemas import UserSchema, UserUpdateSchema
 from quiz_api.utils import add_token_to_blacklist
 
 auth_bp: Blueprint = Blueprint("auth", __name__, url_prefix="/auth")
@@ -47,7 +47,6 @@ def register() -> ResponseReturnValue:
     Returns:
         json: A JSON response indicating the success of the registration.
     """
-    print(dict(**request.get_json()))
     user_data = UserSchema(**request.get_json())
 
     # Prevent admin registration through API
@@ -59,10 +58,8 @@ def register() -> ResponseReturnValue:
         return jsonify({"message": "Email already registered"}), HTTPStatus.BAD_REQUEST
 
     if User.query.filter_by(username=user_data.username).first():
-        print(dict(**request.get_json()))
         return jsonify({"message": "Username already taken"}), HTTPStatus.BAD_REQUEST
 
-    print(dict(**request.get_json()))
     hashed_password = generate_password_hash(user_data.password, method="pbkdf2:sha256")
     new_user = User(
         username=user_data.username,
@@ -142,6 +139,38 @@ def get_current_user() -> ResponseReturnValue:
         ),
         HTTPStatus.OK,
     )
+
+
+@auth_bp.route("/me", methods=[HTTPMethod.PATCH])
+@jwt_required()
+def update_profile() -> ResponseReturnValue:
+    """Update the current user's profile."""
+    try:
+        current_user_id = int(get_jwt_identity())
+        current_user: User | None = db.session.get(User, current_user_id)
+        if not current_user:
+            return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
+
+        update_data = UserUpdateSchema(**request.get_json())
+
+        # Check username uniqueness if it's being updated
+        if update_data.username and update_data.username != current_user.username:
+            if User.query.filter_by(username=update_data.username).first():
+                return jsonify({"message": "Username already taken"}), HTTPStatus.BAD_REQUEST
+
+        # Update the allowed fields if they are provided
+        if update_data.username:
+            current_user.username = update_data.username
+        if update_data.full_name:
+            current_user.full_name = update_data.full_name
+        if update_data.dob:
+            current_user.dob = update_data.dob
+
+        db.session.commit()
+        return jsonify({"message": "Profile updated successfully"}), HTTPStatus.OK
+
+    except ValueError as e:
+        return jsonify({"message": str(e)}), HTTPStatus.BAD_REQUEST
 
 
 @auth_bp.route("/logout", methods=[HTTPMethod.GET])

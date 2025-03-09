@@ -3,6 +3,7 @@
 from datetime import (
     date,
     datetime,
+    timezone,
 )
 from typing import List
 
@@ -31,7 +32,7 @@ class User(db.Model):
     dob: Mapped[date | None] = mapped_column(nullable=True)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     role: Mapped[str] = mapped_column(String(10), nullable=False, default="user")  # 'admin' or 'user'
-    joined_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, nullable=False)
+    joined_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     scores: Mapped[List["Score"]] = relationship(back_populates="user", cascade="all, delete-orphan")
@@ -43,8 +44,8 @@ class Subject(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     description: Mapped[str] = mapped_column(String(500), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
 
     # Relationships
     chapters: Mapped[List["Chapter"]] = relationship(back_populates="subject", cascade="all, delete-orphan")
@@ -57,8 +58,8 @@ class Chapter(db.Model):
     name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     subject_id: Mapped[int] = mapped_column(ForeignKey("subjects.id"), nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-    updated_at: Mapped[datetime | None] = mapped_column(default=None, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc), nullable=False)
+    updated_at: Mapped[datetime | None] = mapped_column(default=None, onupdate=datetime.now(timezone.utc))
 
     # Relationships
     subject: Mapped["Subject"] = relationship(back_populates="chapters")
@@ -73,8 +74,8 @@ class Quiz(db.Model):
     date_of_quiz: Mapped[datetime] = mapped_column(nullable=False, index=True)
     time_duration: Mapped[str] = mapped_column(String(10), nullable=False)  # 'hh:mm'
     remarks: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-    updated_at: Mapped[datetime | None] = mapped_column(default=None, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
+    updated_at: Mapped[datetime | None] = mapped_column(default=None, onupdate=datetime.now(timezone.utc))
 
     # Relationships
     chapter: Mapped["Chapter"] = relationship(back_populates="quizzes")

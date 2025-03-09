@@ -6,6 +6,7 @@ from typing import Optional
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from flask_migrate import Migrate
 
 from quiz_api.config import config
 from quiz_api.errors import register_error_handlers
@@ -18,10 +19,8 @@ from quiz_api.routes.questions import questions_bp
 from quiz_api.routes.quiz_attempts import quiz_attempts_bp
 from quiz_api.routes.quizzes import quiz_bp
 from quiz_api.routes.subjects import subjects_bp
-from quiz_api.utils import (
-    init_admin,
-    init_jwt,
-)
+from quiz_api.utils.auth import init_jwt, init_admin
+from quiz_api.utils.fts import setup_fts
 
 
 def create_app(test_config: Optional[dict | object] = None) -> Flask:
@@ -47,6 +46,9 @@ def create_app(test_config: Optional[dict | object] = None) -> Flask:
 
     # Initialize the database
     db.init_app(app)
+    
+    # Initialize Flask-Migrate for database migrations
+    migrate = Migrate(app, db)
 
     # Initialize JWT Manager
     jwt = JWTManager(app)
@@ -77,7 +79,8 @@ app = create_app()
 # Create tables and initialize admin when the module is imported
 with app.app_context():
     db.create_all()
-    init_admin()  # Initialize admin user
+    init_admin()    # Initialize admin user
+    setup_fts()     # Set up Full-Text Search
 
 if __name__ == "__main__":
-    app.run(host="localhost", port=8000, )
+    app.run(host="0.0.0.0", port=8000)

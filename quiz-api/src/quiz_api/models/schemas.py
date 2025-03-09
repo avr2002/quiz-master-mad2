@@ -36,12 +36,12 @@ class UserSchema(BaseModel):
         if isinstance(value, date):
             return value
         # return datetime.strptime(value, "%d/%m/%Y").date()
-        for fmt in ("%d/%m/%Y", "%Y-%m-%d"):  # Support both formats
+        for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d", "%Y/%m/%d"):  # Support both formats
             try:
                 return datetime.strptime(value, fmt).date()
             except ValueError:
                 continue
-        raise ValueError("Invalid date format. Use DD/MM/YYYY")  # pylint: disable=raise-missing-from  # noqa: B904
+        raise ValueError("Invalid date format. Use DD/MM/YYYY or DD-MM-YYYY or YYYY-MM-DD or YYYY/MM/DD")  # pylint: disable=raise-missing-from  # noqa: B904
 
 
 class UserUpdateSchema(BaseModel):
@@ -61,9 +61,9 @@ class UserUpdateSchema(BaseModel):
         if isinstance(value, date):
             return value
         try:
-            return datetime.strptime(value, "%d/%m/%Y").date()
+            return datetime.strptime(value, "%Y-%m-%d").date()
         except ValueError:
-            raise ValueError("Invalid date format. Use DD/MM/YYYY")  # pylint: disable=raise-missing-from # noqa: B904
+            raise ValueError("Invalid date format. Use DD/MM/YYYY or DD-MM-YYYY or YYYY-MM-DD or YYYY/MM/DD")  # pylint: disable=raise-missing-from # noqa: B904
 
 
 class SubjectSchema(BaseModel):

@@ -1,4 +1,4 @@
-"""Utility functions for the application."""
+"""Authentication utility functions."""
 
 import os
 

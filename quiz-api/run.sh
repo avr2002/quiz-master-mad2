@@ -13,10 +13,36 @@ function install {
 # run the Flask application
 function run {
     try-load-dotenv || true
-    # uv run -m quiz_api.main
-    uv run -- gunicorn quiz_api.main:app --reload
+    uv run -m quiz_api.main
+    # uv run gunicorn quiz_api.main:app --reload
 }
 
+
+function db {
+    export FLASK_APP=quiz_api.main:app
+
+    case "$1" in
+        "init")
+            uv run flask db init
+            ;;
+        "migrate")
+            uv run flask db migrate -m "${2:-Update database schema}"
+            ;;
+        "upgrade")
+            uv run flask db upgrade
+            ;;
+        "downgrade")
+            uv run flask db downgrade
+            ;;
+        "help"|*)
+            echo "Usage: ./run.sh db [init|migrate|upgrade|downgrade]"
+            echo "  init      : Initialize migrations"
+            echo "  migrate   : Create new migration (optional: add message in quotes)"
+            echo "  upgrade   : Apply migrations"
+            echo "  downgrade : Rollback migrations"
+            ;;
+    esac
+}
 
 # run linting, formatting, and other static code quality tools
 function lint {
@@ -46,7 +72,7 @@ function test:ci {
 # (example) ./run.sh test tests/test_states_info.py::test__slow_add
 function run-tests {
     PYTEST_EXIT_STATUS=0
-    uv run -m pytest ${@:-"$THIS_DIR/tests/"} \
+    uv run pytest ${@:-"$THIS_DIR/tests/"} \
         --cov "${COVERAGE_DIR:-$THIS_DIR/src}" \
         --cov-report html \
         --cov-report term \
