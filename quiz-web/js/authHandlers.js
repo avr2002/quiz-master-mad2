@@ -1,3 +1,5 @@
+import { login, register } from '/js/api/auth.js';
+
 // Handle login form submission
 document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();

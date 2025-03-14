@@ -35,7 +35,6 @@ function getScripts() {
         <script src="/js/config.js"></script>
         
         <!-- Custom JS -->
-        <script src="/js/utils.js"></script>
-        <script src="/js/api.js"></script>
+        <script type="module" src="/js/utils.js"></script>
     `;
 } 

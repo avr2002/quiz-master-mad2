@@ -8,6 +8,31 @@ function getBaseNav() {
     `;
 }
 
+// Homepage navigation - shows auth buttons or user info based on login state
+function getHomeNav() {
+    if (localStorage.getItem('token')) {
+        const userName = localStorage.getItem('userName');
+        return `
+            ${getBaseNav()}
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="nav-link text-light">Welcome, ${userName}</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pages/profile.html">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="logout()">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        `;
+    } else {
+        return getAuthNav();  // Reuse existing auth nav for logged out state
+    }
+}
+
 // Auth navigation (for login/register pages)
 function getAuthNav() {
     return `
@@ -32,13 +57,13 @@ function getAdminNav(userName) {
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/admin/subjects.html">Manage Subjects</a>
+                    <a class="nav-link" href="/pages/admin/subjects/list.html">Subjects</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/admin/quizzes.html">Manage Quizzes</a>
+                    <a class="nav-link" href="/pages/admin/quizzes.html">Quizzes</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/admin/users.html">Manage Users</a>
+                    <a class="nav-link" href="/pages/admin/users.html">Users</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/pages/admin/reports.html">Reports</a>
@@ -47,6 +72,9 @@ function getAdminNav(userName) {
             <ul class="navbar-nav">
                 <li class="nav-item">
                     <span class="nav-link text-light">Welcome, ${userName}</span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/pages/profile.html">Profile</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#" onclick="logout()">Logout</a>
@@ -77,9 +105,27 @@ function getUserNav(userName) {
                     <span class="nav-link text-light">Welcome, ${userName}</span>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" href="/pages/profile.html">Profile</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="#" onclick="logout()">Logout</a>
                 </li>
             </ul>
         </div>
-    `;
-} 
+    `
+}
+
+// Logout function for navigation
+function logout() {
+    // Get the logout function from utils.js
+    try {
+        // Try to use the utils.js logout function
+        window.logout();
+    } catch (e) {
+        // Fallback if utils.js logout is not available
+        localStorage.removeItem('token');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userName');
+        window.location.href = '/index.html';
+    }
+}

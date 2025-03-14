@@ -3,7 +3,7 @@
 
 <head>
     <script src="/js/components/layout.js"></script>
-    <script>document.write(getHead('Register'));</script>
+    <script>document.write(getHead('Profile'));</script>
 </head>
 
 <body>
@@ -11,29 +11,37 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <script src="/js/components/navigation.js"></script>
-            <script>document.write(getAuthNav());</script>
+            <script>
+                const userRole = localStorage.getItem('userRole');
+                const userName = localStorage.getItem('userName');
+                document.write(
+                    userRole === 'admin'
+                        ? getAdminNav(userName)
+                        : getUserNav(userName)
+                );
+            </script>
         </div>
     </nav>
 
-    <div class="container mt-5">
+    <div class="container mt-4">
         <script src="/js/components/ui.js"></script>
         <script>document.write(getAlertContainer());</script>
 
         <div class="row justify-content-center">
-            <div class="col-md-6">
+            <div class="col-md-8">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title mb-0">Register</h4>
+                        <h4 class="mb-0">Profile Settings</h4>
                     </div>
                     <div class="card-body">
-                        <form id="registerForm">
+                        <form id="profileForm">
                             <div class="mb-3">
                                 <label for="username" class="form-label">Username</label>
                                 <input type="text" class="form-control" id="username" required>
                             </div>
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" required>
+                                <input type="email" class="form-control" id="email" readonly>
                             </div>
                             <div class="mb-3">
                                 <label for="full_name" class="form-label">Full Name</label>
@@ -43,19 +51,8 @@
                                 <label for="dob" class="form-label">Date of Birth</label>
                                 <input type="date" class="form-control" id="dob">
                             </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="confirm_password" class="form-label">Confirm Password</label>
-                                <input type="password" class="form-control" id="confirm_password" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">Register</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
                         </form>
-                    </div>
-                    <div class="card-footer text-center">
-                        <p class="mb-0">Already have an account? <a href="/pages/auth/login.html">Login</a></p>
                     </div>
                 </div>
             </div>
@@ -64,7 +61,7 @@
 
     <script>document.write(getFooter());</script>
     <script>document.write(getScripts());</script>
-    <script type="module" src="/js/authHandlers.js"></script>
+    <script type="module" src="/js/profileHandlers.js"></script>
 </body>
 
 </html>

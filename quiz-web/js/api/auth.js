@@ -1,7 +1,10 @@
 // Use API URL from config
 const API_BASE_URL = config.API_URL;
 
-async function login({ email, username, password }) {
+// Import handleApiResponse from utils
+import { handleApiResponse } from '/js/utils.js';
+
+export async function login({ email, username, password }) {
     // Create login data with either email or username
     const loginData = {
         password,
@@ -41,8 +44,7 @@ async function login({ email, username, password }) {
     }
 }
 
-
-async function register(userData) {
+export async function register(userData) {
     try {
         const response = await fetch(`${API_BASE_URL}/auth/register`, {
             method: 'POST',
@@ -54,7 +56,6 @@ async function register(userData) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            console.log(errorData);
             if (errorData.details) {
                 // Pydantic validation error format
                 const errorMsgs = errorData.details.map(err => err.msg);
@@ -68,6 +69,56 @@ async function register(userData) {
         return await response.json();
     } catch (error) {
         console.error('Registration error:', error);
+        throw error;
+    }
+}
+
+export async function getCurrentUser() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        return await handleApiResponse(response);
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        throw error;
+    }
+}
+
+export async function updateProfile(data) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(data)
+        });
+
+        return await handleApiResponse(response);
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        throw error;
+    }
+}
+
+export async function logout() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        // Even if the server response fails, we'll still log out locally
+        return await handleApiResponse(response);
+    } catch (error) {
+        console.error('Error during logout:', error);
+        // We still want to clear local storage even if the API call fails
         throw error;
     }
 } 

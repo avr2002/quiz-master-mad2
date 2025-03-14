@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('Edit Subject'));</script>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <script src="/js/components/navigation.js"></script>
+            <script>
+                const userName = localStorage.getItem('userName');
+                document.write(getAdminNav(userName));
+            </script>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 id="pageTitle">Add Subject</h2>
+            <button class="btn btn-secondary" onclick="location.href='list.html'">
+                Back to List
+            </button>
+        </div>
+
+        <!-- Subject Form -->
+        <div class="card">
+            <div class="card-body">
+                <form id="subjectForm">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Subject Name</label>
+                        <input type="text" class="form-control" id="name" required minlength="3" maxlength="100">
+                        <div class="form-text">Name must be between 3 and 100 characters</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" rows="3" required minlength="10"
+                            maxlength="500"></textarea>
+                        <div class="form-text">Description must be between 10 and 500 characters</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Subject</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+    <script type="module">
+        import { createSubject, getSubject, updateSubject } from '/js/api/subjects.js';
+
+        // Get subject ID from URL if editing
+        const urlParams = new URLSearchParams(window.location.search);
+        const subjectId = urlParams.get('id');
+
+        // Load subject data if editing
+        if (subjectId) {
+            document.getElementById('pageTitle').textContent = 'Edit Subject';
+            loadSubject(subjectId);
+        }
+
+        async function loadSubject(id) {
+            try {
+                const subject = await getSubject(id);
+                document.getElementById('name').value = subject.name;
+                document.getElementById('description').value = subject.description;
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('subjectForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const data = {
+                name: document.getElementById('name').value,
+                description: document.getElementById('description').value
+            };
+
+            try {
+                if (subjectId) {
+                    await updateSubject(subjectId, data);
+                } else {
+                    await createSubject(data);
+                }
+                window.location.href = 'list.html';
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+
+        // Check if user is authenticated and is admin
+        if (!isAuthenticated()) {
+            window.location.href = '/pages/auth/login.html';
+        } else if (localStorage.getItem('userRole') !== 'admin') {
+            window.location.href = '/pages/hello.html';
+        }
+    </script>
+</body>
+
+</html>

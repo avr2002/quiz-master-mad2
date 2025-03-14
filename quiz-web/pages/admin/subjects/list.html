@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('Subjects'));</script>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <script src="/js/components/navigation.js"></script>
+            <script>
+                const userName = localStorage.getItem('userName');
+                document.write(getAdminNav(userName));
+            </script>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Subjects</h2>
+            <button class="btn btn-primary" onclick="location.href='edit.html'">
+                Add New Subject
+            </button>
+        </div>
+
+        <!-- Subjects Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table" id="subjectsTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subjectsTableBody">
+                            <!-- Subjects will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+    <script type="module">
+        import { getSubjects, deleteSubject } from '/js/api/subjects.js';
+
+        async function loadSubjects() {
+            try {
+                const subjects = await getSubjects();
+                const tableBody = document.getElementById('subjectsTableBody');
+
+                tableBody.innerHTML = subjects.map(subject => `
+                    <tr>
+                        <td>
+                            <a href="/pages/admin/chapters/list.html?subject_id=${subject.id}">${subject.name}</a>
+                        </td>
+                        <td>${subject.description}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary me-2" 
+                                    onclick="location.href='edit.html?id=${subject.id}'">
+                                Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger" 
+                                    onclick="handleDelete(${subject.id})">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Make handleDelete available globally
+        window.handleDelete = async (id) => {
+            if (confirm('Are you sure you want to delete this subject?')) {
+                try {
+                    await deleteSubject(id);
+                    await loadSubjects();  // Reload the table
+                } catch (error) {
+                    showError(error.message);
+                }
+            }
+        };
+
+        // Check if user is authenticated and is admin
+        if (!isAuthenticated()) {
+            window.location.href = '/pages/auth/login.html';
+        } else if (localStorage.getItem('userRole') !== 'admin') {
+            window.location.href = '/pages/hello.html';
+        } else {
+            // Load subjects when page loads
+            loadSubjects();
+        }
+    </script>
+</body>
+
+</html>
