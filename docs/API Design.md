@@ -17,6 +17,10 @@
     - role, dob, joined_at
   - Requires valid JWT token
   - Returns 404 if user no longer exists
+- `PATCH /auth/me` → Update current user's profile
+  - Can update username, full_name, email, and password
+  - Requires valid JWT token
+  - Returns updated user profile
 
 **Logic**
 - Admin account is pre-created (no registration)
@@ -64,12 +68,18 @@
   - Validates field lengths
 - `DELETE /subjects/{subject_id}` → Delete subject (Admin only)
   - Cascades deletion to chapters and quizzes
+- `GET /subjects/search` → Search subjects
+  - Supports query parameter `q` for search term
+  - Supports pagination with `limit` and `offset`
+  - Returns subjects matching the search term in name or description
+  - Uses SQLite FTS5 for efficient full-text search
 
 **Logic**
 - Public read access
 - Admin-only modifications
 - Proper validation of inputs
 - Timestamps for creation/updates
+- Full-text search capabilities
 
 ---
 
@@ -90,6 +100,11 @@
   - Validates field lengths
 - `DELETE /subjects/{subject_id}/chapters/{chapter_id}` → Delete a chapter (Admin only)
   - Cascades deletion to related quizzes
+- `GET /subjects/{subject_id}/chapters/search` → Search chapters within a subject
+  - Supports query parameter `q` for search term
+  - Supports pagination with `limit` and `offset`
+  - Returns chapters matching the search term in name or description
+  - Scoped to the specified subject
 
 **Logic**
 - Each subject has multiple chapters
@@ -98,6 +113,7 @@
 - Admin required for create, update, delete operations
 - Proper validation of subject_id and chapter_id in all operations
 - Timestamps tracked for creation and updates
+- Full-text search capabilities
 
 ---
 
@@ -118,6 +134,11 @@
   - Validates time format (HH:MM)
 - `DELETE /quizzes/{quiz_id}` → Delete a quiz (Admin only)
   - Cascades deletion to related questions and attempts
+- `GET /quizzes/search` → Search quizzes
+  - Supports query parameter `q` for search term
+  - Optional `chapter_id` parameter to filter by chapter
+  - Supports pagination with `limit` and `offset`
+  - Searches quiz remarks for matching terms
 
 **Logic**
 - Each chapter can have multiple quizzes
@@ -125,6 +146,7 @@
 - Public read access to quizzes
 - Admin required for create, update, delete operations
 - Timestamps tracked for creation and updates
+- Full-text search capabilities
 
 ---
 
@@ -191,7 +213,23 @@
 
 ---
 
-## **8. Reports & Analytics**
+## **8. User Search**
+**Endpoints**
+- `GET /users/search` → Search users
+  - Admin-only access
+  - Supports query parameter `q` for search term
+  - Searches username, full name, and email
+  - Supports pagination with `limit` and `offset`
+  - Returns matching user profiles
+
+**Logic**
+- Full-text search on user profiles
+- Admin-only access for privacy
+- Efficient search using SQLite FTS5
+
+---
+
+## **9. Reports & Analytics**
 **Endpoints**
 - `GET /admin/reports/daily` → Send daily quiz reminders to inactive users
 - `GET /admin/reports/monthly` → Generate monthly performance report (sent via email)
@@ -204,7 +242,7 @@
 
 ---
 
-## **9. Miscellaneous**
+## **10. Miscellaneous**
 **Endpoints**
 - `GET /healthcheck` → API health check endpoint
 - `GET /stats` → Get overall platform statistics (subjects, users, quizzes, etc.)
@@ -217,20 +255,37 @@
 | `/auth/login`                    | POST   | All        |
 | `/auth/register`                 | POST   | Public     |
 | `/auth/me`                       | GET    | Logged-in  |
+| `/auth/me`                       | PATCH  | Logged-in  |
 | `/subjects`                      | GET    | All        |
 | `/subjects`                      | POST   | Admin      |
+| `/subjects/search`               | GET    | All        |
 | `/chapters/{chapter_id}/quizzes` | GET    | All        |
+| `/subjects/{id}/chapters/search` | GET    | All        |
+| `/quizzes/search`                | GET    | All        |
+| `/users/search`                  | GET    | Admin      |
 | `/quizzes/{quiz_id}/questions`   | GET    | Restricted |
 | `/quizzes/{quiz_id}/attempt`     | POST   | User       |
 | `/admin/reports/daily`           | GET    | Admin      |
 
 ---
 
-### **Caching Strategy**
+### **Search Implementation**
+The application implements full-text search using SQLite's FTS5 extension:
+
+1. **Virtual Tables**: Each searchable entity (subjects, chapters, users, quizzes) has a corresponding FTS5 virtual table
+2. **Triggers**: Database triggers keep the FTS tables in sync with the main tables
+3. **Porter Stemming**: Used for better matching of word variations (e.g., "mathematics" matches "math")
+4. **Wildcard Queries**: Support for partial matching with `term*` syntax
+5. **Performance**: Optimized for fast text search even with large datasets
+
+---
+
+<!-- ### **Caching Strategy**
 1. **Subjects & Chapters** → Cached with Redis (expires in **6 hours**)
 2. **Quizzes & Questions** → Cached per user session
 3. **User Profiles & Scores** → Cached **per request**, refreshed every 1 hour
 4. **Admin Dashboard Stats** → Cached with **Celery periodic jobs** to precompute data
+5. **Search Results** → Cached for 15 minutes with query-specific keys -->
 
 ---
 
