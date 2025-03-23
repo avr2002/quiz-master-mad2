@@ -1,10 +1,9 @@
 """Tests for successful subject route operations."""
 
-import pytest
 from http import HTTPStatus
 
+import pytest
 from flask.testing import FlaskClient
-
 from quiz_api.models.database import db
 from quiz_api.models.models import Subject
 
@@ -53,13 +52,15 @@ def test_get_subject_by_id(client: FlaskClient) -> None:
     assert "updated_at" in response.json
 
 
-@pytest.mark.skip(reason="Known SQLite in-memory database corruption issue - (sqlite3.DatabaseError) database disk image is malformed")
-def test_update_subject_as_admin(client: FlaskClient, admin_token: str) -> None:
+@pytest.mark.skip(
+    reason="Known SQLite in-memory database corruption issue - (sqlite3.DatabaseError) database disk image is malformed"
+)
+def test_update_subject_as_admin(client: FlaskClient, admin_token: str, subject: Subject) -> None:
     """Test updating a subject as admin."""
     # Create a subject
-    subject = Subject(name="Biology", description="Study of living organisms")
-    db.session.add(subject)
-    db.session.commit()
+    # subject = Subject(name="Biology", description="Study of living organisms")
+    # db.session.add(subject)
+    # db.session.commit()
 
     response = client.patch(
         f"/subjects/{subject.id}",

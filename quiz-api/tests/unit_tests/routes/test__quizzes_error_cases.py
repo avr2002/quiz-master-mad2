@@ -4,7 +4,6 @@ from datetime import datetime
 from http import HTTPStatus
 
 from flask.testing import FlaskClient
-
 from quiz_api.models.models import (
     Chapter,
     Quiz,

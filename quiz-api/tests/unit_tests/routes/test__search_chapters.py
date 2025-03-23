@@ -3,7 +3,6 @@
 from http import HTTPStatus
 
 from flask.testing import FlaskClient
-
 from quiz_api.models.database import db
 from quiz_api.models.models import Chapter, Subject
 
@@ -45,8 +44,10 @@ def test_search_chapters_with_query(client: FlaskClient, subject: Subject) -> No
     assert response.status_code == HTTPStatus.OK
     assert "items" in response.json
     assert len(response.json["items"]) >= 2  # Should find at least 2 chapters with "concepts"
-    assert all("concepts" in item["name"].lower() or "concepts" in item["description"].lower() 
-               for item in response.json["items"])
+    assert all(
+        "concepts" in item["name"].lower() or "concepts" in item["description"].lower()
+        for item in response.json["items"]
+    )
 
 
 def test_search_chapters_with_pagination(client: FlaskClient, subject: Subject) -> None:
@@ -98,7 +99,7 @@ def test_search_chapters_across_subjects(client: FlaskClient, subject: Subject) 
     other_subject = Subject(name="Other Subject", description="Another subject")
     db.session.add(other_subject)
     db.session.commit()
-    
+
     # Add chapters to both subjects with similar names
     chapters1 = [Chapter(name="Common Chapter", description="Same name in both subjects", subject_id=subject.id)]
     chapters2 = [Chapter(name="Common Chapter", description="Same name in both subjects", subject_id=other_subject.id)]
@@ -111,4 +112,4 @@ def test_search_chapters_across_subjects(client: FlaskClient, subject: Subject) 
     assert response.status_code == HTTPStatus.OK
     assert "items" in response.json
     assert len(response.json["items"]) == 1  # Should only find the chapter in the first subject
-    assert all(item["subject_id"] == subject.id for item in response.json["items"]) 
+    assert all(item["subject_id"] == subject.id for item in response.json["items"])

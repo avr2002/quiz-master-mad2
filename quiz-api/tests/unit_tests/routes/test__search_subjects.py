@@ -3,8 +3,6 @@
 from http import HTTPStatus
 
 from flask.testing import FlaskClient
-from sqlalchemy import text
-
 from quiz_api.models.database import db
 from quiz_api.models.models import Subject
 
@@ -46,8 +44,10 @@ def test_search_subjects_with_query(client: FlaskClient) -> None:
     assert response.status_code == HTTPStatus.OK
     assert "items" in response.json
     assert len(response.json["items"]) >= 2  # Should find at least 2 subjects with "mathematics"
-    assert all("mathematics" in item["name"].lower() or "mathematics" in item["description"].lower() 
-               for item in response.json["items"])
+    assert all(
+        "mathematics" in item["name"].lower() or "mathematics" in item["description"].lower()
+        for item in response.json["items"]
+    )
 
 
 def test_search_subjects_with_pagination(client: FlaskClient) -> None:
@@ -82,4 +82,4 @@ def test_search_subjects_no_results(client: FlaskClient) -> None:
     assert response.status_code == HTTPStatus.OK
     assert "items" in response.json
     assert len(response.json["items"]) == 0
-    assert response.json["total"] == 0 
+    assert response.json["total"] == 0

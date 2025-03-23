@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 
 from flask.testing import FlaskClient
-
 from quiz_api.models.database import db
 from quiz_api.models.models import Chapter, Quiz, Subject
 
@@ -14,12 +13,11 @@ def test_search_quizzes_empty_query(client: FlaskClient, chapter: Chapter, quiz:
     # Create additional quizzes
     now = datetime.now()
     quizzes = [
-        Quiz(chapter_id=chapter.id, date_of_quiz=now + timedelta(days=1), time_duration="01:00", 
-             remarks="Midterm quiz"),
-        Quiz(chapter_id=chapter.id, date_of_quiz=now + timedelta(days=2), time_duration="01:30", 
-             remarks="Final quiz"),
-        Quiz(chapter_id=chapter.id, date_of_quiz=now + timedelta(days=3), time_duration="00:45", 
-             remarks="Pop quiz"),
+        Quiz(
+            chapter_id=chapter.id, date_of_quiz=now + timedelta(days=1), time_duration="01:00", remarks="Midterm quiz"
+        ),
+        Quiz(chapter_id=chapter.id, date_of_quiz=now + timedelta(days=2), time_duration="01:30", remarks="Final quiz"),
+        Quiz(chapter_id=chapter.id, date_of_quiz=now + timedelta(days=3), time_duration="00:45", remarks="Pop quiz"),
     ]
     db.session.add_all(quizzes)
     db.session.commit()
@@ -39,12 +37,21 @@ def test_search_quizzes_with_query(client: FlaskClient, chapter: Chapter) -> Non
     # Create quizzes with specific terms for searching
     now = datetime.now()
     quizzes = [
-        Quiz(chapter_id=chapter.id, date_of_quiz=now + timedelta(days=1), time_duration="01:00", 
-             remarks="Midterm assessment"),
-        Quiz(chapter_id=chapter.id, date_of_quiz=now + timedelta(days=2), time_duration="01:30", 
-             remarks="Final assessment"),
-        Quiz(chapter_id=chapter.id, date_of_quiz=now + timedelta(days=3), time_duration="00:45", 
-             remarks="Practice quiz"),
+        Quiz(
+            chapter_id=chapter.id,
+            date_of_quiz=now + timedelta(days=1),
+            time_duration="01:00",
+            remarks="Midterm assessment",
+        ),
+        Quiz(
+            chapter_id=chapter.id,
+            date_of_quiz=now + timedelta(days=2),
+            time_duration="01:30",
+            remarks="Final assessment",
+        ),
+        Quiz(
+            chapter_id=chapter.id, date_of_quiz=now + timedelta(days=3), time_duration="00:45", remarks="Practice quiz"
+        ),
     ]
     db.session.add_all(quizzes)
     db.session.commit()
@@ -63,12 +70,11 @@ def test_search_quizzes_with_pagination(client: FlaskClient, chapter: Chapter) -
     now = datetime.now()
     quizzes = []
     for i in range(15):
-        quizzes.append(Quiz(
-            chapter_id=chapter.id, 
-            date_of_quiz=now + timedelta(days=i), 
-            time_duration="01:00", 
-            remarks=f"Quiz {i}"
-        ))
+        quizzes.append(
+            Quiz(
+                chapter_id=chapter.id, date_of_quiz=now + timedelta(days=i), time_duration="01:00", remarks=f"Quiz {i}"
+            )
+        )
     db.session.add_all(quizzes)
     db.session.commit()
 
@@ -114,7 +120,7 @@ def test_search_quizzes_across_chapters(client: FlaskClient, subject: Subject, c
     other_chapter = Chapter(name="Other Chapter", description="Another chapter", subject_id=subject.id)
     db.session.add(other_chapter)
     db.session.commit()
-    
+
     now = datetime.now()
     # Add quizzes to both chapters with similar remarks
     quiz1 = Quiz(chapter_id=chapter.id, date_of_quiz=now, time_duration="01:00", remarks="Common Quiz")
@@ -128,4 +134,4 @@ def test_search_quizzes_across_chapters(client: FlaskClient, subject: Subject, c
     assert response.status_code == HTTPStatus.OK
     assert "items" in response.json
     assert len(response.json["items"]) == 1  # Should only find the quiz in the first chapter
-    assert all(item["chapter_id"] == chapter.id for item in response.json["items"]) 
+    assert all(item["chapter_id"] == chapter.id for item in response.json["items"])

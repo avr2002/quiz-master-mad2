@@ -3,7 +3,6 @@
 from http import HTTPStatus
 
 from flask.testing import FlaskClient
-
 from quiz_api.models.database import db
 from quiz_api.models.models import (
     Chapter,

@@ -1,7 +1,7 @@
-import pytest
 from typing import Generator
-from flask.testing import FlaskClient
 
+import pytest
+from flask.testing import FlaskClient
 from quiz_api.config import TestConfig
 from quiz_api.main import create_app
 from quiz_api.models.models import User

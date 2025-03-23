@@ -3,11 +3,9 @@ from datetime import (
     datetime,
     timezone,
 )
-import os
+
 import pytest
 from flask.testing import FlaskClient
-from werkzeug.security import generate_password_hash
-
 from quiz_api.models.database import db
 from quiz_api.models.models import (
     Chapter,
@@ -18,6 +16,7 @@ from quiz_api.models.models import (
     User,
 )
 from quiz_api.utils.fts import setup_fts
+from werkzeug.security import generate_password_hash
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -28,9 +27,9 @@ def setup_database(client: FlaskClient):
     # db.drop_all()
     db.create_all()
     setup_fts()
-    
+
     yield db.session
-    
+
     db.session.remove()
     db.drop_all()
 
@@ -87,7 +86,9 @@ def chapter(setup_database, subject: Subject) -> Chapter:
 @pytest.fixture
 def quiz(setup_database, chapter: Chapter) -> Quiz:
     """Create a test quiz."""
-    quiz: Quiz = Quiz(chapter_id=chapter.id, date_of_quiz=datetime.now(timezone.utc), time_duration="01:00", remarks="Test quiz")
+    quiz: Quiz = Quiz(
+        chapter_id=chapter.id, date_of_quiz=datetime.now(timezone.utc), time_duration="01:00", remarks="Test quiz"
+    )
     setup_database.add(quiz)
     setup_database.commit()
     return quiz

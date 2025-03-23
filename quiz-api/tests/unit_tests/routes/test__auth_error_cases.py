@@ -1,10 +1,9 @@
 from http import HTTPStatus
 
 from flask.testing import FlaskClient
-from werkzeug.test import TestResponse
-
 from quiz_api.models.database import db
 from quiz_api.models.models import User
+from werkzeug.test import TestResponse
 
 
 def test_register_with_existing_email(client: FlaskClient, regular_user: User):

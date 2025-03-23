@@ -3,7 +3,6 @@
 from http import HTTPStatus
 
 from flask.testing import FlaskClient
-
 from quiz_api.models.database import db
 from quiz_api.models.models import (
     Chapter,
@@ -13,20 +12,22 @@ from quiz_api.models.models import (
 
 def test_create_chapter_as_admin(client: FlaskClient, admin_token: str, subject: Subject) -> None:
     """Test creating a chapter successfully as admin."""
+    subject_id = subject.id
+
     response = client.post(
-        f"/subjects/{subject.id}/chapters",
+        f"/subjects/{subject_id}/chapters",
         headers={"Authorization": f"Bearer {admin_token}"},
         json={
             "name": "Introduction to Python",
             "description": "Learn the basics of Python programming language",
-            "subject_id": subject.id,
+            "subject_id": subject_id,
         },
     )
 
     assert response.status_code == HTTPStatus.CREATED
     assert response.json["message"] == "Chapter created successfully"
     assert response.json["chapter"]["name"] == "Introduction to Python"
-    assert response.json["chapter"]["subject_id"] == subject.id
+    assert response.json["chapter"]["subject_id"] == subject_id
 
 
 def test_get_all_chapters(client: FlaskClient, subject: Subject) -> None:
