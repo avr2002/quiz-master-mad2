@@ -70,38 +70,52 @@ def create_subject():
 
     except ValueError as e:
         return jsonify({"message": str(e)}), HTTPStatus.BAD_REQUEST
+    except Exception as e:
+        raise e
+    finally:
+        db.session.close()
 
 
 @subjects_bp.route("", methods=[HTTPMethod.GET])
 def get_all_subjects():
     """Get all subjects."""
-    subjects = Subject.query.all()
-    subjects_list = [
-        {"id": subject.id, "name": subject.name, "description": subject.description} for subject in subjects
-    ]
+    try:
+        subjects = db.session.query(Subject).all()  # Subject.query.all()
+        subjects_list = [
+            {"id": subject.id, "name": subject.name, "description": subject.description} for subject in subjects
+        ]
 
-    return jsonify(subjects_list), HTTPStatus.OK
+        return jsonify(subjects_list), HTTPStatus.OK
+    except Exception as e:
+        raise e
+    finally:
+        db.session.close()
 
 
 @subjects_bp.route("/<int:subject_id>", methods=[HTTPMethod.GET])
 def get_subject(subject_id: int):
     """Get details of a specific subject."""
-    subject: Subject | None = db.session.get(Subject, subject_id)
-    if not subject:
-        return jsonify({"message": "Subject not found"}), HTTPStatus.NOT_FOUND
+    try:
+        subject: Subject | None = db.session.get(Subject, subject_id)
+        if not subject:
+            return jsonify({"message": "Subject not found"}), HTTPStatus.NOT_FOUND
 
-    return (
-        jsonify(
-            {
-                "id": subject.id,
-                "name": subject.name,
-                "description": subject.description,
-                "created_at": subject.created_at,
-                "updated_at": subject.updated_at,
-            }
-        ),
-        HTTPStatus.OK,
-    )
+        return (
+            jsonify(
+                {
+                    "id": subject.id,
+                    "name": subject.name,
+                    "description": subject.description,
+                    "created_at": subject.created_at,
+                    "updated_at": subject.updated_at,
+                }
+            ),
+            HTTPStatus.OK,
+        )
+    except Exception as e:
+        raise e
+    finally:
+        db.session.close()
 
 
 @subjects_bp.route("/<int:subject_id>", methods=[HTTPMethod.PATCH])
@@ -133,68 +147,78 @@ def update_subject(subject_id: int):
 
     except ValueError as e:
         return jsonify({"message": str(e)}), HTTPStatus.BAD_REQUEST
+    except Exception as e:
+        raise e
+    finally:
+        db.session.close()
 
 
 @subjects_bp.route("/<int:subject_id>", methods=[HTTPMethod.DELETE])
 @jwt_required()
 def delete_subject(subject_id: int):
     """Delete a subject (Admin only)."""
-    # Check if user is admin
-    current_user_id = int(get_jwt_identity())
-    current_user: User | None = db.session.get(User, current_user_id)
-    if not current_user or current_user.role != "admin":
-        return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
+    try:
+        # Check if user is admin
+        current_user_id = int(get_jwt_identity())
+        current_user: User | None = db.session.get(User, current_user_id)
+        if not current_user or current_user.role != "admin":
+            return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
 
-    subject: Subject | None = db.session.get(Subject, subject_id)
-    if not subject:
-        return jsonify({"message": "Subject not found"}), HTTPStatus.NOT_FOUND
+        subject: Subject | None = db.session.get(Subject, subject_id)
+        if not subject:
+            return jsonify({"message": "Subject not found"}), HTTPStatus.NOT_FOUND
 
-    db.session.delete(subject)
-    db.session.commit()
-    return jsonify({"message": "Subject deleted successfully"}), HTTPStatus.OK
+        db.session.delete(subject)
+        db.session.commit()
+        return jsonify({"message": "Subject deleted successfully"}), HTTPStatus.OK
+    finally:
+        db.session.close()
 
 
 @subjects_bp.route("/search", methods=[HTTPMethod.GET])
 def search():
     """Search subjects using Full-Text Search."""
-    search_params = SearchSchema(**request.args)
-    query = search_params.q
-    
-    if not query:
-        # Return all subjects if no query
-        subjects = Subject.query.limit(search_params.limit).offset(search_params.offset).all()
-        subjects_list = [
-            {
-                "id": subject.id,
-                "name": subject.name,
-                "description": subject.description,
-                "created_at": subject.created_at.isoformat(),
-                "updated_at": subject.updated_at.isoformat() if subject.updated_at else None,
-            }
-            for subject in subjects
-        ]
-    else:
-        # Use FTS to search
-        results = search_subjects(query, limit=search_params.limit, offset=search_params.offset)
-        
-        # Format results
-        subjects_list = [
-            {
-                "id": row[0],
-                "name": row[1],
-                "description": row[2],
-                "created_at": row[3] if isinstance(row[3], str) else row[3].isoformat() if row[3] else None,
-                "updated_at": row[4] if isinstance(row[4], str) else row[4].isoformat() if row[4] else None,
-            }
-            for row in results
-        ]
-    
-    # Return with metadata
-    response = {
-        "items": subjects_list,
-        "total": len(subjects_list),
-        "limit": search_params.limit,
-        "offset": search_params.offset
-    }
-    
-    return jsonify(response), HTTPStatus.OK
+    try:
+        search_params = SearchSchema(**request.args)
+        query = search_params.q
+
+        if not query:
+            # Return all subjects if no query
+            subjects = Subject.query.limit(search_params.limit).offset(search_params.offset).all()
+            subjects_list = [
+                {
+                    "id": subject.id,
+                    "name": subject.name,
+                    "description": subject.description,
+                    "created_at": subject.created_at.isoformat(),
+                    "updated_at": subject.updated_at.isoformat() if subject.updated_at else None,
+                }
+                for subject in subjects
+            ]
+        else:
+            # Use FTS to search
+            results = search_subjects(query, limit=search_params.limit, offset=search_params.offset)
+
+            # Format results
+            subjects_list = [
+                {
+                    "id": row[0],
+                    "name": row[1],
+                    "description": row[2],
+                    "created_at": row[3] if isinstance(row[3], str) else row[3].isoformat() if row[3] else None,
+                    "updated_at": row[4] if isinstance(row[4], str) else row[4].isoformat() if row[4] else None,
+                }
+                for row in results
+            ]
+
+        # Return with metadata
+        response = {
+            "items": subjects_list,
+            "total": len(subjects_list),
+            "limit": search_params.limit,
+            "offset": search_params.offset,
+        }
+
+        return jsonify(response), HTTPStatus.OK
+    finally:
+        db.session.close()

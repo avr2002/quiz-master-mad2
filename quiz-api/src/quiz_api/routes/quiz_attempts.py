@@ -1,32 +1,14 @@
 """User Management Routes."""
 
 from datetime import datetime, timezone
-from http import (
-    HTTPMethod,
-    HTTPStatus,
-)
+from http import HTTPMethod, HTTPStatus
 
-from flask import (
-    Blueprint,
-    jsonify,
-    request,
-)
-from flask_jwt_extended import (
-    get_jwt_identity,
-    jwt_required,
-)
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from quiz_api.models.database import db
-from quiz_api.models.models import (
-    Question,
-    Quiz,
-    Score,
-    User,
-)
-from quiz_api.models.schemas import (
-    QuizAttemptSchema,
-    ScoreSchema,
-)
+from quiz_api.models.models import Question, Quiz, Score, User
+from quiz_api.models.schemas import QuizAttemptSchema, ScoreSchema
 
 quiz_attempts_bp: Blueprint = Blueprint("quiz_attempts", __name__)
 
@@ -99,7 +81,12 @@ def submit_quiz(quiz_id: int):
             correct_answers += 1
 
     # Record score
-    score = Score(quiz_id=quiz_id, user_id=current_user_id, total_score=total_score, timestamp=datetime.now(timezone.utc))
+    score = Score(
+        quiz_id=quiz_id,
+        user_id=current_user_id,
+        total_score=total_score,
+        timestamp=datetime.now(timezone.utc),
+    )
     db.session.add(score)
     db.session.commit()
 

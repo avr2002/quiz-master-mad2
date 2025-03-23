@@ -1,12 +1,15 @@
 """Error handlers for the quiz API."""
 
 from http import HTTPStatus
+from typing import Any
 
 from flask import (
     Flask,
     jsonify,
 )
 from pydantic import ValidationError
+
+from quiz_api.models.database import db
 
 
 def register_error_handlers(app: Flask):
@@ -29,5 +32,8 @@ def register_error_handlers(app: Flask):
         return jsonify({"message": "Resource not found"}), HTTPStatus.NOT_FOUND
 
     @app.errorhandler(HTTPStatus.INTERNAL_SERVER_ERROR)
-    def handle_server_error(exc: Exception):
+    def handle_server_error(exc: Exception | Any):
+        if db.session.is_active:
+            print("Rolling back session")
+            db.session.rollback()
         return jsonify({"message": "Internal server error"}), HTTPStatus.INTERNAL_SERVER_ERROR

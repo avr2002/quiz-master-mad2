@@ -6,4 +6,4 @@ from quiz_api.utils.auth import (
     init_jwt,
 )
 
-__all__ = ["init_jwt", "init_admin", "add_token_to_blacklist"] 
+__all__ = ["init_jwt", "init_admin", "add_token_to_blacklist"]

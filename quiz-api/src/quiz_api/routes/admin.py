@@ -145,10 +145,10 @@ def search_users_endpoint():
     current_user: User | None = db.session.get(User, current_user_id)
     if not current_user or current_user.role != "admin":
         return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
-    
+
     search_params = SearchSchema(**request.args)
     query = search_params.q
-    
+
     if not query:
         # Return all users if no query
         users = User.query.limit(search_params.limit).offset(search_params.offset).all()
@@ -167,7 +167,7 @@ def search_users_endpoint():
     else:
         # Use FTS to search
         results = search_users(query, limit=search_params.limit, offset=search_params.offset)
-        
+
         # Format results
         users_list = [
             {
@@ -182,13 +182,13 @@ def search_users_endpoint():
             }
             for row in results
         ]
-    
+
     # Return with metadata
     response = {
         "items": users_list,
         "total": len(users_list),
         "limit": search_params.limit,
-        "offset": search_params.offset
+        "offset": search_params.offset,
     }
-    
+
     return jsonify(response), HTTPStatus.OK

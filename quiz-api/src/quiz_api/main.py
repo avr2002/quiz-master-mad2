@@ -19,18 +19,20 @@ from quiz_api.routes.questions import questions_bp
 from quiz_api.routes.quiz_attempts import quiz_attempts_bp
 from quiz_api.routes.quizzes import quiz_bp
 from quiz_api.routes.subjects import subjects_bp
-from quiz_api.utils.auth import init_jwt, init_admin
+from quiz_api.utils.auth import init_admin, init_jwt
 from quiz_api.utils.fts import setup_fts
 
 
 def create_app(test_config: Optional[dict | object] = None) -> Flask:
-    """Create and configure the Flask application.
+    """
+    Create and configure the Flask application.
 
     Args:
         test_config: Configuration dictionary or config class
 
     Returns:
         Configured Flask application instance.
+
     """
     app: Flask = Flask(__name__)
 
@@ -46,7 +48,7 @@ def create_app(test_config: Optional[dict | object] = None) -> Flask:
 
     # Initialize the database
     db.init_app(app)
-    
+
     # Initialize Flask-Migrate for database migrations
     migrate = Migrate(app, db)
 
@@ -58,7 +60,7 @@ def create_app(test_config: Optional[dict | object] = None) -> Flask:
     register_error_handlers(app)
 
     # Register CORS
-    CORS(app)
+    CORS(app, resources={r"/*": {"origins": "*"}})
 
     # Register blueprints
     app.register_blueprint(home_bp)
@@ -79,8 +81,9 @@ app = create_app()
 # Create tables and initialize admin when the module is imported
 with app.app_context():
     db.create_all()
-    init_admin()    # Initialize admin user
-    setup_fts()     # Set up Full-Text Search
+    init_admin()  # Initialize admin user
+    setup_fts()  # Set up Full-Text Search
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)

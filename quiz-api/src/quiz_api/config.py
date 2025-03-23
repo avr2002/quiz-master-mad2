@@ -63,7 +63,7 @@ class DevelopmentConfig(Config):
     DEBUG = True
     SQLITE_DB_DIR = str(ROOT_DIR / "database" / "quiz_master.db")
     SQLALCHEMY_DATABASE_URI = f"sqlite:///{SQLITE_DB_DIR}"
-    SQLALCHEMY_ECHO = True  # Set True to Log SQL queries
+    SQLALCHEMY_ECHO = False  # Set True to Log SQL queries
 
 
 class ProductionConfig(Config):

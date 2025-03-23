@@ -46,6 +46,7 @@ def register() -> ResponseReturnValue:
 
     Returns:
         json: A JSON response indicating the success of the registration.
+
     """
     user_data = UserSchema(**request.get_json())
 
@@ -88,6 +89,7 @@ def login() -> ResponseReturnValue:
 
     Returns:
         json: A JSON response indicating the success of the login.
+
     """
     data = request.get_json()
     identifier = data.get("email") or data.get("username")
@@ -181,6 +183,7 @@ def logout() -> ResponseReturnValue:
 
     Returns:
         json: A message indicating successful logout
+
     """
     jti = get_jwt()["jti"]  # Get JWT ID from token
     add_token_to_blacklist(jti)
