@@ -121,4 +121,4 @@ export async function logout() {
         // We still want to clear local storage even if the API call fails
         throw error;
     }
-} 
+}

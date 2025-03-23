@@ -5,4 +5,4 @@ const config = {
 };
 
 // Prevent modifications to config object
-Object.freeze(config); 
+Object.freeze(config);

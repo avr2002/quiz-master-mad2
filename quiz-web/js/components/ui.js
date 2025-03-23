@@ -24,4 +24,4 @@ function getCard(title, content, footer = '') {
             ` : ''}
         </div>
     `;
-} 
+}

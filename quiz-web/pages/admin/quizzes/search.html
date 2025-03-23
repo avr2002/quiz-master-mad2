@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('Search Quizzes'));</script>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <script src="/js/components/navigation.js"></script>
+            <script>
+                const userName = localStorage.getItem('userName');
+                document.write(getAdminNav(userName));
+            </script>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <!-- Breadcrumb Navigation -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/pages/admin/subjects/list.html">Subjects</a></li>
+                <li class="breadcrumb-item" id="chapter-breadcrumb"></li>
+                <li class="breadcrumb-item active" aria-current="page"><a href="#" id="quizzes-link">Quizzes</a></li>
+            </ol>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Search Quizzes</h2>
+        </div>
+
+        <!-- Search Form -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form id="search-form">
+                    <input type="hidden" name="chapter_id" id="chapter-id-input">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label for="search-query" class="form-label">Search Query</label>
+                                <input type="text" class="form-control" id="search-query" name="q"
+                                    placeholder="Enter search terms...">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="search-limit" class="form-label">Results Per Page</label>
+                                <select class="form-select" id="search-limit" name="limit">
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Search Results</h5>
+                <p id="result-stats" class="mb-0 text-muted"></p>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table" id="quizzesTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Date</th>
+                                <th>Duration</th>
+                                <th>Remarks</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quizzesTableBody">
+                            <!-- Quizzes will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                <nav aria-label="Search results pagination">
+                    <ul class="pagination justify-content-center" id="pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+    <script type="module">
+        import { initQuizzesSearch } from '/js/pages/quizzes/search.js';
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', initQuizzesSearch);
+    </script>
+</body>
+
+</html>

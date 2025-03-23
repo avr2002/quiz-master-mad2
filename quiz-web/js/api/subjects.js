@@ -19,6 +19,28 @@ export async function getSubjects() {
     }
 }
 
+// Add search function for subjects
+export async function searchSubjects(query, limit = 10, offset = 0) {
+    try {
+        const params = new URLSearchParams({
+            q: query,
+            limit,
+            offset
+        });
+
+        const response = await fetch(`${API_BASE_URL}/subjects/search?${params}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        return await handleApiResponse(response);
+    } catch (error) {
+        console.error('Error searching subjects:', error);
+        throw error;
+    }
+}
 
 export async function createSubject(data) {
     try {
@@ -56,7 +78,7 @@ export async function getSubject(id) {
 export async function updateSubject(id, data) {
     try {
         const response = await fetch(`${API_BASE_URL}/subjects/${id}`, {
-            method: 'PUT',
+            method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -93,4 +115,4 @@ function logout() {
     localStorage.removeItem('userRole');
     localStorage.removeItem('userName');
     window.location.href = '/index.html';
-} 
+}

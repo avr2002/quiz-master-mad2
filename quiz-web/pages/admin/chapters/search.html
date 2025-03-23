@@ -3,7 +3,7 @@
 
 <head>
     <script src="/js/components/layout.js"></script>
-    <script>document.write(getHead('Subjects'));</script>
+    <script>document.write(getHead('Search Chapters'));</script>
 </head>
 
 <body>
@@ -22,19 +22,37 @@
         <script src="/js/components/ui.js"></script>
         <script>document.write(getAlertContainer());</script>
 
+        <!-- Breadcrumb Navigation -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/pages/admin/subjects/list.html">Subjects</a></li>
+                <li class="breadcrumb-item"><a href="#" id="chapters-link">Chapters</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Search Results</li>
+            </ol>
+        </nav>
+
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Subjects</h2>
-            <button class="btn btn-primary" onclick="location.href='edit.html'">
-                Add New Subject
-            </button>
+            <div>
+                <h2 id="search-title">Search Results</h2>
+                <p id="subject-name" class="text-muted"></p>
+            </div>
+            <div>
+                <button class="btn btn-secondary me-2" id="back-btn">
+                    Back to All Chapters
+                </button>
+                <button class="btn btn-primary" id="add-chapter-btn">
+                    Add New Chapter
+                </button>
+            </div>
         </div>
 
-        <!-- Simple Search Form (redirects to search page) -->
+        <!-- Search Bar -->
         <div class="mb-4">
-            <form action="search.html" method="get">
+            <form id="searchForm" action="search.html" method="get">
+                <input type="hidden" name="subject_id" id="subject-id-input">
                 <div class="input-group">
-                    <input type="text" name="q" class="form-control" placeholder="Search subjects...">
+                    <input type="text" id="searchInput" name="q" class="form-control" placeholder="Search chapters...">
                     <button class="btn btn-outline-secondary" type="submit">
                         <i class="fas fa-search"></i> Search
                     </button>
@@ -42,11 +60,14 @@
             </form>
         </div>
 
-        <!-- Subjects Table -->
+        <!-- Search Results -->
         <div class="card">
+            <div class="card-header">
+                <h5 id="resultsTitle">Results</h5>
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table" id="subjectsTable">
+                    <table class="table" id="resultsTable">
                         <thead>
                             <tr>
                                 <th>Name</th>
@@ -54,8 +75,8 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="subjectsTableBody">
-                            <!-- Subjects will be loaded here -->
+                        <tbody id="resultsTableBody">
+                            <!-- Results will be loaded here -->
                         </tbody>
                     </table>
                 </div>
@@ -66,9 +87,9 @@
     <script>document.write(getFooter());</script>
     <script>document.write(getScripts());</script>
     <script type="module">
-        import { initSubjectsList } from '/js/pages/subjects/list.js';
+        import { initChaptersSearch } from '/js/pages/chapters/search.js';
         // Initialize the page
-        document.addEventListener('DOMContentLoaded', initSubjectsList);
+        document.addEventListener('DOMContentLoaded', initChaptersSearch);
     </script>
 </body>
 

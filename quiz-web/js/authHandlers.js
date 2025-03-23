@@ -79,4 +79,4 @@ document.getElementById('registerForm')?.addEventListener('submit', async (e) =>
     } catch (error) {
         showError(error.message);
     }
-}); 
+});

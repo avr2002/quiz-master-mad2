@@ -54,6 +54,11 @@
     <script>document.write(getFooter());</script>
     <script>document.write(getScripts());</script>
     <script type="module">
+        import { initSubjectEdit } from '/js/pages/subjects/edit.js';
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', initSubjectEdit);
+    </script>
+    <!-- <script type="module">
         import { createSubject, getSubject, updateSubject } from '/js/api/subjects.js';
 
         // Get subject ID from URL if editing
@@ -103,7 +108,7 @@
         } else if (localStorage.getItem('userRole') !== 'admin') {
             window.location.href = '/pages/hello.html';
         }
-    </script>
+    </script> -->
 </body>
 
 </html>

@@ -96,4 +96,4 @@ export async function handleApiResponse(response) {
     }
 
     return await response.json();
-} 
+}

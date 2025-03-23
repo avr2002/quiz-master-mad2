@@ -38,4 +38,4 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
 });
 
 // Load profile when page loads
-loadProfile(); 
+loadProfile();
