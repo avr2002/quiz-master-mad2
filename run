@@ -26,6 +26,7 @@ function clean {
       -exec rm {} +
 }
 
+
 # export the contents of .env as environment variables
 function try-load-dotenv {
     if [ ! -f "$THIS_DIR/.env" ]; then
