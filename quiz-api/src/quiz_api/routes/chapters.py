@@ -29,10 +29,10 @@ from quiz_api.models.schemas import (
 from quiz_api.utils.search import search_chapters
 
 # Define Blueprint
-chapters_bp = Blueprint("chapters", __name__, url_prefix="/subjects/<int:subject_id>/chapters")
+chapters_bp = Blueprint("chapters", __name__)
 
 
-@chapters_bp.route("", methods=[HTTPMethod.POST])
+@chapters_bp.route("/subjects/<int:subject_id>/chapters", methods=[HTTPMethod.POST])
 @jwt_required()
 def create_chapter(subject_id: int):
     """Create a new chapter (Admin only)."""
@@ -74,19 +74,50 @@ def create_chapter(subject_id: int):
 
     except ValueError as e:
         return jsonify({"message": str(e)}), HTTPStatus.BAD_REQUEST
+    except Exception as e:
+        raise e
+    finally:
+        db.session.close()
 
 
-@chapters_bp.route("", methods=[HTTPMethod.GET])
+@chapters_bp.route("/subjects/<int:subject_id>/chapters", methods=[HTTPMethod.GET])
 def get_subject_chapters(subject_id: int):
     """Get all chapters under a subject."""
-    # Check if subject exists
-    subject: Subject | None = db.session.get(Subject, subject_id)
-    if not subject:
-        return jsonify({"message": "Subject not found"}), HTTPStatus.NOT_FOUND
+    try:
+        # Check if subject exists
+        subject: Subject | None = db.session.get(Subject, subject_id)
+        if not subject:
+            return jsonify({"message": "Subject not found"}), HTTPStatus.NOT_FOUND
 
-    chapters = Chapter.query.filter_by(subject_id=subject_id).all()
-    chapters_list = [
-        {
+        chapters = Chapter.query.filter_by(subject_id=subject_id).all()
+        chapters_list = [
+            {
+                "id": chapter.id,
+                "name": chapter.name,
+                "description": chapter.description,
+                "subject_id": chapter.subject_id,
+                "created_at": chapter.created_at.isoformat(),
+                "updated_at": chapter.updated_at.isoformat() if chapter.updated_at else None,
+            }
+            for chapter in chapters
+        ]
+
+        return jsonify(chapters_list), HTTPStatus.OK
+    except Exception as e:
+        raise e
+    finally:
+        db.session.close()
+
+
+@chapters_bp.route("/chapters/<int:chapter_id>", methods=[HTTPMethod.GET])
+def get_chapter(chapter_id: int):
+    """Get details of a specific chapter."""
+    try:
+        chapter: Chapter | None = db.session.get(Chapter, chapter_id)
+        if not chapter:
+            return jsonify({"message": "Chapter not found"}), HTTPStatus.NOT_FOUND
+
+        response = {
             "id": chapter.id,
             "name": chapter.name,
             "description": chapter.description,
@@ -94,33 +125,16 @@ def get_subject_chapters(subject_id: int):
             "created_at": chapter.created_at.isoformat(),
             "updated_at": chapter.updated_at.isoformat() if chapter.updated_at else None,
         }
-        for chapter in chapters
-    ]
-
-    return jsonify(chapters_list), HTTPStatus.OK
-
-
-@chapters_bp.route("/<int:chapter_id>", methods=[HTTPMethod.GET])
-def get_chapter(subject_id: int, chapter_id: int):
-    """Get details of a specific chapter."""
-    chapter: Chapter | None = db.session.get(Chapter, chapter_id)
-    if not chapter or chapter.subject_id != subject_id:
-        return jsonify({"message": "Chapter not found"}), HTTPStatus.NOT_FOUND
-    
-    response = {
-        "id": chapter.id,
-        "name": chapter.name,
-        "description": chapter.description,
-        "subject_id": chapter.subject_id,
-        "created_at": chapter.created_at.isoformat(),
-        "updated_at": chapter.updated_at.isoformat() if chapter.updated_at else None,
-    }
-    return jsonify(response), HTTPStatus.OK
+        return jsonify(response), HTTPStatus.OK
+    except Exception as e:
+        raise e
+    finally:
+        db.session.close()
 
 
-@chapters_bp.route("/<int:chapter_id>", methods=[HTTPMethod.PATCH])
+@chapters_bp.route("/chapters/<int:chapter_id>", methods=[HTTPMethod.PATCH])
 @jwt_required()
-def update_chapter(subject_id: int, chapter_id: int):
+def update_chapter(chapter_id: int):
     """Update a chapter's details (Admin only)."""
     try:
         # Check if user is admin
@@ -130,7 +144,7 @@ def update_chapter(subject_id: int, chapter_id: int):
             return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
 
         chapter: Chapter | None = db.session.get(Chapter, chapter_id)
-        if not chapter or chapter.subject_id != subject_id:
+        if not chapter:
             return jsonify({"message": "Chapter not found"}), HTTPStatus.NOT_FOUND
 
         # Validate update data
@@ -147,78 +161,95 @@ def update_chapter(subject_id: int, chapter_id: int):
 
     except ValueError as e:
         return jsonify({"message": str(e)}), HTTPStatus.BAD_REQUEST
+    except Exception as e:
+        raise e
+    finally:
+        db.session.close()
 
 
-@chapters_bp.route("/<int:chapter_id>", methods=[HTTPMethod.DELETE])
+@chapters_bp.route("/chapters/<int:chapter_id>", methods=[HTTPMethod.DELETE])
 @jwt_required()
-def delete_chapter(subject_id: int, chapter_id: int):
+def delete_chapter(chapter_id: int):
     """Delete a chapter (Admin only)."""
-    # Check if user is admin
-    current_user_id = int(get_jwt_identity())
-    current_user: User | None = db.session.get(User, current_user_id)
-    if not current_user or current_user.role != "admin":
-        return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
+    try:
+        # Check if user is admin
+        current_user_id = int(get_jwt_identity())
+        current_user: User | None = db.session.get(User, current_user_id)
+        if not current_user or current_user.role != "admin":
+            return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
 
-    chapter: Chapter | None = db.session.get(Chapter, chapter_id)
-    if not chapter or chapter.subject_id != subject_id:
-        return jsonify({"message": "Chapter not found"}), HTTPStatus.NOT_FOUND
+        chapter: Chapter | None = db.session.get(Chapter, chapter_id)
+        if not chapter:
+            return jsonify({"message": "Chapter not found"}), HTTPStatus.NOT_FOUND
 
-    db.session.delete(chapter)
-    db.session.commit()
-    return jsonify({"message": "Chapter deleted successfully"}), HTTPStatus.OK
+        db.session.delete(chapter)
+        db.session.commit()
+        return jsonify({"message": "Chapter deleted successfully"}), HTTPStatus.OK
+    except Exception as e:
+        raise e
+    finally:
+        db.session.close()
 
 
-@chapters_bp.route("/search", methods=[HTTPMethod.GET])
+@chapters_bp.route("/subjects/<int:subject_id>/chapters/search", methods=[HTTPMethod.GET])
 def search_subject_chapters(subject_id: int):
     """Search chapters within a subject using Full-Text Search."""
-    search_params = SearchSchema(**request.args)
-    query = search_params.q
-    
-    # Check if subject exists
-    subject: Subject | None = db.session.get(Subject, subject_id)
-    if not subject:
-        return jsonify({"message": "Subject not found"}), HTTPStatus.NOT_FOUND
-    
-    if not query:
-        # Return all chapters for this subject if no query
-        chapters = Chapter.query.filter_by(subject_id=subject_id)\
-            .limit(search_params.limit)\
-            .offset(search_params.offset)\
-            .all()
-        chapters_list = [
-            {
-                "id": chapter.id,
-                "name": chapter.name,
-                "description": chapter.description,
-                "subject_id": chapter.subject_id,
-                "created_at": chapter.created_at.isoformat(),
-                "updated_at": chapter.updated_at.isoformat() if chapter.updated_at else None,
-            }
-            for chapter in chapters
-        ]
-    else:
-        # Use FTS to search chapters
-        results = search_chapters(query, limit=search_params.limit, offset=search_params.offset)
-        
-        # Filter results to only include chapters from this subject
-        chapters_list = [
-            {
-                "id": row[0],
-                "name": row[1],
-                "description": row[2],
-                "subject_id": row[3],
-                "created_at": row[4] if isinstance(row[4], str) else row[4].isoformat() if row[4] else None,
-                "updated_at": row[5] if isinstance(row[5], str) else row[5].isoformat() if row[5] else None,
-            }
-            for row in results if row[3] == subject_id
-        ]
-    
-    # Return with metadata
-    response = {
-        "items": chapters_list,
-        "total": len(chapters_list),
-        "limit": search_params.limit,
-        "offset": search_params.offset
-    }
-    
-    return jsonify(response), HTTPStatus.OK
+    try:
+        search_params = SearchSchema(**request.args)
+        query = search_params.q
+
+        # Check if subject exists
+        subject: Subject | None = db.session.get(Subject, subject_id)
+        if not subject:
+            return jsonify({"message": "Subject not found"}), HTTPStatus.NOT_FOUND
+
+        if not query:
+            # Return all chapters for this subject if no query
+            chapters = (
+                Chapter.query.filter_by(subject_id=subject_id)
+                .limit(search_params.limit)
+                .offset(search_params.offset)
+                .all()
+            )
+            chapters_list = [
+                {
+                    "id": chapter.id,
+                    "name": chapter.name,
+                    "description": chapter.description,
+                    "subject_id": chapter.subject_id,
+                    "created_at": chapter.created_at.isoformat(),
+                    "updated_at": chapter.updated_at.isoformat() if chapter.updated_at else None,
+                }
+                for chapter in chapters
+            ]
+        else:
+            # Use FTS to search chapters
+            results = search_chapters(query, limit=search_params.limit, offset=search_params.offset)
+
+            # Filter results to only include chapters from this subject
+            chapters_list = [
+                {
+                    "id": row[0],
+                    "name": row[1],
+                    "description": row[2],
+                    "subject_id": row[3],
+                    "created_at": row[4] if isinstance(row[4], str) else row[4].isoformat() if row[4] else None,
+                    "updated_at": row[5] if isinstance(row[5], str) else row[5].isoformat() if row[5] else None,
+                }
+                for row in results
+                if row[3] == subject_id
+            ]
+
+        # Return with metadata
+        response = {
+            "items": chapters_list,
+            "total": len(chapters_list),
+            "limit": search_params.limit,
+            "offset": search_params.offset,
+        }
+
+        return jsonify(response), HTTPStatus.OK
+    except Exception as e:
+        raise e
+    finally:
+        db.session.close()
