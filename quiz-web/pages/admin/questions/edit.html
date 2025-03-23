@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('Edit Question'));</script>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <script src="/js/components/navigation.js"></script>
+            <script>
+                const userName = localStorage.getItem('userName');
+                document.write(getAdminNav(userName));
+            </script>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <!-- Breadcrumb Navigation -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/pages/admin/subjects/list.html">Subjects</a></li>
+                <li class="breadcrumb-item" id="chapter-breadcrumb"></li>
+                <li class="breadcrumb-item" id="quiz-breadcrumb"></li>
+                <li class="breadcrumb-item"><a href="#" id="questions-link">Questions</a></li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span id="page-action">Add</span> Question
+                </li>
+            </ol>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><span id="header-action">Add</span> Question</h2>
+        </div>
+
+        <!-- Multiple Questions Form -->
+        <div class="card">
+            <div class="card-body">
+                <form id="questions-form">
+                    <input type="hidden" id="quiz-id" name="quiz_id">
+
+                    <div id="questions-container">
+                        <!-- Question 1 -->
+                        <div class="question-item mb-4" data-question-index="0">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Question 1</h5>
+                                    <button type="button" class="btn btn-danger btn-sm delete-question-btn"
+                                        disabled>Remove</button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="question-statement-0" class="form-label">Question</label>
+                                        <textarea class="form-control" id="question-statement-0"
+                                            name="question_statement_0" rows="3" required></textarea>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="option1-0" class="form-label">Option 1</label>
+                                        <input type="text" class="form-control" id="option1-0" name="option1_0"
+                                            required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="option2-0" class="form-label">Option 2</label>
+                                        <input type="text" class="form-control" id="option2-0" name="option2_0"
+                                            required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="option3-0" class="form-label">Option 3</label>
+                                        <input type="text" class="form-control" id="option3-0" name="option3_0"
+                                            required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="option4-0" class="form-label">Option 4</label>
+                                        <input type="text" class="form-control" id="option4-0" name="option4_0"
+                                            required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="correct-option-0" class="form-label">Correct Answer</label>
+                                        <select class="form-select" id="correct-option-0" name="correct_option_0"
+                                            required>
+                                            <option value="1">Option 1</option>
+                                            <option value="2">Option 2</option>
+                                            <option value="3">Option 3</option>
+                                            <option value="4">Option 4</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="points-0" class="form-label">Points</label>
+                                        <input type="number" class="form-control" id="points-0" name="points_0" min="1"
+                                            value="1" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add Question Button -->
+                    <div class="mb-4">
+                        <button type="button" id="add-question-btn" class="btn btn-success w-100">
+                            <i class="bi bi-plus-circle"></i> Add Another Question
+                        </button>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Question(s)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+    <script type="module">
+        import { initQuestionEdit } from '/js/pages/questions/edit.js';
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', initQuestionEdit);
+    </script>
+</body>
+
+</html>

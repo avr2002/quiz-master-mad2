@@ -99,7 +99,11 @@ function renderQuizzes(quizzes, chapterId) {
 
     tableBody.innerHTML = quizzes.map(quiz => `
         <tr>
-            <td>${quiz.name}</td>
+            <td>
+                <a href="/pages/admin/questions/list.html?chapter_id=${chapterId}&quiz_id=${quiz.id}" class="fw-bold text-primary">
+                    ${quiz.name}
+                </a>
+            </td>
             <td>${formatQuizDate(quiz.date_of_quiz)}</td>
             <td>${formatDuration(quiz.time_duration)}</td>
             <td>${quiz.remarks || 'No remarks'}</td>

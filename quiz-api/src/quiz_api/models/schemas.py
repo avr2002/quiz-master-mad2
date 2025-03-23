@@ -1,18 +1,9 @@
 """Pydantic Schemas for quiz API."""
 
-from datetime import (
-    date,
-    datetime,
-)
-from typing import Optional
+from datetime import date, datetime
+from typing import List, Optional
 
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    EmailStr,
-    Field,
-    field_validator,
-)
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class SearchSchema(BaseModel):
@@ -142,6 +133,7 @@ class QuestionSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     quiz_id: int = Field(..., gt=0)
+    id: int = Field(..., gt=0)  # question ID
     question_statement: str = Field(..., min_length=1)
     option1: str = Field(..., min_length=1)
     option2: str = Field(..., min_length=1)
@@ -149,6 +141,13 @@ class QuestionSchema(BaseModel):
     option4: str = Field(..., min_length=1)
     correct_option: int = Field(..., ge=1, le=4)
     points: int = Field(default=1, ge=1)
+
+
+class MultipleQuestionsSchema(BaseModel):
+    """Schema for creating multiple questions at once."""
+
+    model_config = ConfigDict(from_attributes=True)
+    questions: List[QuestionSchema]
 
 
 class QuestionUpdateSchema(BaseModel):
