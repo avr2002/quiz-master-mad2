@@ -1,61 +1,44 @@
-[tool.black]
+# https://github.com/astral-sh/ruff?tab=readme-ov-file#configuration
+[tool.ruff]
 line-length = 119
-exclude = ".venv"
 
-[tool.flake8]
-docstring-convention = "all"
-ignore = [
-    "D107",
-    "D212",
-    "E501",
-    "W503",
-    "W605",
-    "D203",
-    "D100",
-    "D101",
-    "D",
-    "R701",
-]
-exclude = [".venv"]
-max-line-length = 119
-
-# radon
-radon-max-cc = 10
-
-[tool.isort]
-profile = "black"
-multi_line_output = "VERTICAL_HANGING_INDENT"
-force_grid_wrap = 2
-line_length = 119
-
-[tool.pylint."messages control"]
-disable = [
-    "line-too-long",
-    "trailing-whitespace",
-    "missing-function-docstring",
-    "missing-class-docstring",
-    "consider-using-f-string",
-    "import-error",
-    "too-few-public-methods",
-    "redefined-outer-name",
-    "missing-class-docstring",
-    "unused-argument",
-    "raise-missing-from",
-    "missing-module-docstring",
-    "R0801",
-
-]
-
+# https://docs.astral.sh/ruff/rules/
 [tool.ruff.lint]
-# Enable flake8-bugbear (`B`) rules.
-select = ["E", "F", "B", "ERA"]
+extend-select = [
+    # pycodestyle errors
+    "E",
+    # flake8-bugbear
+    "B",
+    # pylint equivalent rules
+    "PL",
+    # isort
+    "I",
+    # pydocstyle for docstrings
+    "D",
+    # pep8-naming
+    "N",
+]
 
-# Never enforce `E501` (line length violations).
-ignore = ["E501", "F401", "ERA001", "B904"]
+ignore = [
+    "E501",  # line-too-long
+    "F401",  # unused-import
+    "W605",  # invalid-escape-sequence
+    "W291",  # trailing-whitespace"
+    "UP032", # Use f-string instead of format call
+    # pydocstyle - https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    "D103", # undocumented-public-function
+    "D107", # undocumented-public-init
+    "D203", # incorrect-blank-line-before-class
+    "D100", # undocumented-public-module
+    "D212", # multi-line-summary-first-line
+    "D400", # first line should end with a period
+    "D401", # first line should be in imperative mood
+    "D415", # First line should end with a period, question mark, or exclamation point
+]
 
-# Avoid trying to fix flake8-bugbear (`B`) violations.
-unfixable = ["B"]
+# https://docs.astral.sh/ruff/rules/#mccabe-c90
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
-[tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["E402"]
-"**/{tests,docs,tools}/*" = ["E402"]
+[dependency-groups]
+dev = ["mypy>=1.15.0", "ruff>=0.9.6"]
