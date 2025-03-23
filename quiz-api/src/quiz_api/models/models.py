@@ -45,7 +45,9 @@ class Subject(db.Model):
     name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     description: Mapped[str] = mapped_column(String(500), nullable=False)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(
+        default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc)
+    )
 
     # Relationships
     chapters: Mapped[List["Chapter"]] = relationship(back_populates="subject", cascade="all, delete-orphan")
@@ -71,6 +73,7 @@ class Quiz(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     chapter_id: Mapped[int] = mapped_column(ForeignKey("chapters.id"), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     date_of_quiz: Mapped[datetime] = mapped_column(nullable=False, index=True)
     time_duration: Mapped[str] = mapped_column(String(10), nullable=False)  # 'hh:mm'
     remarks: Mapped[str | None] = mapped_column(Text, nullable=True)

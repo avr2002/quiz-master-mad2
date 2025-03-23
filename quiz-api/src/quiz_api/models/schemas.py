@@ -118,7 +118,8 @@ class QuizSchema(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    chapter_id: int = Field(..., gt=0)
+    chapter_id: Optional[int] = Field(None, gt=0)
+    name: str = Field(..., min_length=2, max_length=100)
     date_of_quiz: datetime = Field(...)
     time_duration: str = Field(..., pattern=r"^\d{2}:\d{2}$")  # HH:MM format
     remarks: str | None = None
@@ -129,6 +130,7 @@ class QuizUpdateSchema(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    name: str | None = Field(None, min_length=2, max_length=100)
     date_of_quiz: datetime | None = None
     time_duration: str | None = Field(None, pattern=r"^\d{2}:\d{2}$")  # HH:MM format
     remarks: str | None = None
