@@ -20,6 +20,8 @@ function run {
 
 function db {
     export FLASK_APP=quiz_api.main:app
+    # Set flag to skip FTS setup during migrations
+    export FLASK_DB_MIGRATION=true
 
     case "$1" in
         "init")
@@ -46,14 +48,14 @@ function db {
 
 # run linting, formatting, and other static code quality tools
 function lint {
-    pre-commit run --all-files
+    uv run -- pre-commit run --all-files
 }
 
 # same as `lint` but with any special considerations for CI
 function lint:ci {
     # We skip no-commit-to-branch since that blocks commits to `main`.
     # All merged PRs are commits to `main` so this must be disabled.
-    SKIP=no-commit-to-branch pre-commit run --all-files
+    SKIP=no-commit-to-branch uv run -- pre-commit run --all-files
 }
 
 # execute tests that are not marked as `slow`
