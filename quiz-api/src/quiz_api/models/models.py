@@ -1,23 +1,11 @@
 """Database models for quiz API."""
 
-from datetime import (
-    date,
-    datetime,
-    timezone,
-)
+from datetime import date, datetime, timedelta, timezone
 from typing import List
 
-from sqlalchemy import (
-    ForeignKey,
-    String,
-    Text,
-    func,
-)
-from sqlalchemy.orm import (
-    Mapped,
-    mapped_column,
-    relationship,
-)
+from sqlalchemy import ForeignKey, String, Text, func
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from quiz_api.models.database import db
 
@@ -84,6 +72,14 @@ class Quiz(db.Model):
     chapter: Mapped["Chapter"] = relationship(back_populates="quizzes")
     questions: Mapped[List["Question"]] = relationship(back_populates="quiz", cascade="all, delete-orphan")
     scores: Mapped[List["Score"]] = relationship(back_populates="quiz", cascade="all, delete-orphan")
+
+    @hybrid_property
+    def end_time(self) -> datetime | None:
+        """Calculate the end datetime of the quiz."""
+        if self.time_duration and self.date_of_quiz:
+            hours, minutes = map(int, self.time_duration.split(":"))
+            return self.date_of_quiz + timedelta(hours=hours, minutes=minutes)
+        return None
 
 
 class Question(db.Model):

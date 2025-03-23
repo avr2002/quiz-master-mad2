@@ -1,31 +1,14 @@
 """Quiz routes for the Quiz API."""
 
-from http import (
-    HTTPMethod,
-    HTTPStatus,
-)
+from datetime import datetime
+from http import HTTPMethod, HTTPStatus
 
-from flask import (
-    Blueprint,
-    jsonify,
-    request,
-)
-from flask_jwt_extended import (
-    get_jwt_identity,
-    jwt_required,
-)
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from quiz_api.models.database import db
-from quiz_api.models.models import (
-    Chapter,
-    Quiz,
-    User,
-)
-from quiz_api.models.schemas import (
-    QuizSchema,
-    QuizUpdateSchema,
-    SearchSchema,
-)
+from quiz_api.models.models import Chapter, Quiz, Score, User
+from quiz_api.models.schemas import QuizSchema, QuizUpdateSchema, SearchSchema
 from quiz_api.utils.search import search_quizzes
 
 quiz_bp: Blueprint = Blueprint("quizzes", __name__)
@@ -73,32 +56,37 @@ def create_quiz(chapter_id: int):
 
 
 @quiz_bp.route("/chapters/<int:chapter_id>/quizzes", methods=[HTTPMethod.GET])
+@jwt_required()
 def get_chapter_quizzes(chapter_id: int):
-    """Get all quizzes under a chapter."""
-    # Verify chapter exists
-    chapter: Chapter | None = db.session.get(Chapter, chapter_id)
-    if not chapter:
-        return jsonify({"message": "Chapter not found"}), HTTPStatus.NOT_FOUND
+    """Get all quizzes under a chapter. (User is logged in)"""
+    try:
+        # Verify chapter exists
+        chapter: Chapter | None = db.session.get(Chapter, chapter_id)
+        if not chapter:
+            return jsonify({"message": "Chapter not found"}), HTTPStatus.NOT_FOUND
 
-    quizzes = Quiz.query.filter_by(chapter_id=chapter_id).all()
-    quizzes_list = [
-        {
-            "id": quiz.id,
-            "chapter_id": quiz.chapter_id,
-            "name": quiz.name,
-            "date_of_quiz": quiz.date_of_quiz.isoformat(),
-            "time_duration": quiz.time_duration,
-            "remarks": quiz.remarks,
-        }
-        for quiz in quizzes
-    ]
+        quizzes = Quiz.query.filter_by(chapter_id=chapter_id).all()
+        quizzes_list = [
+            {
+                "id": quiz.id,
+                "chapter_id": quiz.chapter_id,
+                "name": quiz.name,
+                "date_of_quiz": quiz.date_of_quiz.isoformat(),
+                "time_duration": quiz.time_duration,
+                "remarks": quiz.remarks,
+            }
+            for quiz in quizzes
+        ]
 
-    return jsonify(quizzes_list), HTTPStatus.OK
+        return jsonify(quizzes_list), HTTPStatus.OK
+    finally:
+        db.session.close()
 
 
 @quiz_bp.route("/quizzes/<int:quiz_id>", methods=[HTTPMethod.GET])
+@jwt_required()
 def get_quiz(quiz_id: int):
-    """Get details of a specific quiz."""
+    """Get details of a specific quiz. (User is logged in)"""
     try:
         quiz: Quiz | None = db.session.get(Quiz, quiz_id)
         if not quiz:
@@ -112,7 +100,6 @@ def get_quiz(quiz_id: int):
             "time_duration": quiz.time_duration,
             "remarks": quiz.remarks,
         }
-
         return jsonify(response), HTTPStatus.OK
     except Exception as e:
         raise e
@@ -174,6 +161,139 @@ def delete_quiz(quiz_id: int):
         db.session.commit()
 
         return jsonify({"message": "Quiz deleted successfully"}), HTTPStatus.OK
+    finally:
+        db.session.close()
+
+
+@quiz_bp.route("/quizzes/upcoming", methods=[HTTPMethod.GET])
+@jwt_required()
+def get_all_upcoming_quizzes():
+    """Get all upcoming quizzes. (User is logged in)"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        current_user: User | None = db.session.get(User, current_user_id)
+        if not current_user or current_user.role not in ["user", "admin"]:
+            return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
+
+        current_date = datetime.now()
+        quizzes = Quiz.query.filter(Quiz.date_of_quiz >= current_date).all()
+
+        if not quizzes:
+            return jsonify({"message": "No upcoming quizzes found"}), HTTPStatus.NOT_FOUND
+
+        # Get chapter id and subject id from quiz
+        quizzes_list = [
+            {
+                "id": quiz.id,
+                "chapter_id": quiz.chapter_id,
+                "subject_id": quiz.chapter.subject_id,
+                "name": quiz.name,
+                "date_of_quiz": quiz.date_of_quiz.isoformat(),
+                "time_duration": quiz.time_duration,
+                "remarks": quiz.remarks,
+            }
+            for quiz in quizzes
+        ]
+        return jsonify(quizzes_list), HTTPStatus.OK
+    finally:
+        db.session.close()
+
+
+@quiz_bp.route("/quizzes/past", methods=[HTTPMethod.GET])
+@jwt_required()
+def get_all_past_quizzes():
+    """Get all past quizzes. (Admin only)"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        current_user: User | None = db.session.get(User, current_user_id)
+        if not current_user or current_user.role != "admin":
+            return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
+
+        quizzes = Quiz.query.all()
+        if not quizzes:
+            return jsonify({"message": "No quizzes found"}), HTTPStatus.NOT_FOUND
+
+        # get seperate list of past and upcoming quizzes
+        current_date = datetime.now()
+        past_quizzes = [
+            {
+                "id": quiz.id,
+                "chapter_id": quiz.chapter_id,
+                "subject_id": quiz.chapter.subject_id,
+                "name": quiz.name,
+                "date_of_quiz": quiz.date_of_quiz.isoformat(),
+                "time_duration": quiz.time_duration,
+                "remarks": quiz.remarks,
+            }
+            for quiz in quizzes
+            if quiz.date_of_quiz < current_date
+        ]
+
+        return jsonify(past_quizzes), HTTPStatus.OK
+    finally:
+        db.session.close()
+
+
+@quiz_bp.route("/quizzes/ongoing", methods=[HTTPMethod.GET])
+@jwt_required()
+def get_all_ongoing_quizzes():
+    """Get all ongoing quizzes. (User is logged in)"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        current_user: User | None = db.session.get(User, current_user_id)
+        if not current_user or current_user.role not in ["user", "admin"]:
+            return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
+
+        current_time = datetime.now()
+
+        # Fetch only quizzes that have started (optimizing DB filtering)
+        quizzes = Quiz.query.filter(Quiz.date_of_quiz <= current_time).all()
+        if not quizzes:
+            return jsonify({"message": "No ongoing quizzes found"}), HTTPStatus.NOT_FOUND
+
+        quizzes_list = [
+            {
+                "id": quiz.id,
+                "chapter_id": quiz.chapter_id,
+                "subject_id": quiz.chapter.subject_id,
+                "name": quiz.name,
+                "date_of_quiz": quiz.date_of_quiz.isoformat(),
+                "time_duration": quiz.time_duration,
+                "remarks": quiz.remarks,
+            }
+            for quiz in quizzes
+            if current_time <= quiz.end_time
+        ]
+        return jsonify(quizzes_list), HTTPStatus.OK
+    finally:
+        db.session.close()
+
+
+@quiz_bp.route("/quizzes/user", methods=[HTTPMethod.GET])
+@jwt_required()
+def get_quizzes_by_user():
+    """Get all quizzes attempted by a user. (User is logged in)"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        current_user: User | None = db.session.get(User, current_user_id)
+        if not current_user:
+            return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
+
+        quizzes = Score.query.filter_by(user_id=current_user_id).all()
+        if not quizzes:
+            return jsonify({"message": "No quizzes attempted by the user"}), HTTPStatus.NOT_FOUND
+
+        quizzes_list = [
+            {
+                "id": quiz.id,
+                "quiz_id": quiz.quiz_id,
+                "user_id": quiz.user_id,
+                "score": quiz.score,
+            }
+            for quiz in quizzes
+        ]
+
+        return jsonify(quizzes_list), HTTPStatus.OK
     finally:
         db.session.close()
 

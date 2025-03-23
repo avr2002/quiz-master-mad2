@@ -183,4 +183,84 @@ export function formatDuration(duration) {
     }
 
     return result || '0 minutes';
+}
+
+/**
+ * Get all upcoming quizzes
+ * @returns {Promise<Array>} - Array of upcoming quiz objects
+ */
+export async function getUpcomingQuizzes() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/quizzes/upcoming`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        return await handleApiResponse(response);
+    } catch (error) {
+        console.error('Error fetching upcoming quizzes:', error);
+        throw error;
+    }
+}
+
+/**
+ * Get all past quizzes
+ * @returns {Promise<Array>} - Array of past quiz objects
+ */
+export async function getPastQuizzes() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/quizzes/past`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        return await handleApiResponse(response);
+    } catch (error) {
+        console.error('Error fetching past quizzes:', error);
+        throw error;
+    }
+}
+
+/**
+ * Get all ongoing quizzes
+ * @returns {Promise<Array>} - Array of ongoing quiz objects
+ */
+export async function getOngoingQuizzes() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/quizzes/ongoing`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        return await handleApiResponse(response);
+    } catch (error) {
+        console.error('Error fetching ongoing quizzes:', error);
+        throw error;
+    }
+}
+
+/**
+ * Get all quizzes attempted by the current user
+ * @returns {Promise<Array>} - Array of quiz score objects
+ */
+export async function getUserQuizzes() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/quizzes/user`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        return await handleApiResponse(response);
+    } catch (error) {
+        console.error('Error fetching user quizzes:', error);
+        throw error;
+    }
 } 

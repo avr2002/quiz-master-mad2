@@ -1,6 +1,6 @@
 """Pydantic Schemas for quiz API."""
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
@@ -114,6 +114,21 @@ class QuizSchema(BaseModel):
     date_of_quiz: datetime = Field(...)
     time_duration: str = Field(..., pattern=r"^\d{2}:\d{2}$")  # HH:MM format
     remarks: str | None = None
+
+    @field_validator("date_of_quiz", mode="after")
+    @classmethod
+    def convert_to_utc(cls, dt: datetime) -> datetime:
+        """Convert a naive datetime to UTC."""
+        if dt.tzinfo is None:
+            # Assume naive datetime is in local time — convert to UTC
+            return dt.astimezone().astimezone(timezone.utc)
+        # If datetime is already timezone-aware, just convert to UTC
+        return dt.astimezone(timezone.utc)
+
+    # @property
+    # def end_time(self) -> datetime:
+    #     hours, minutes = map(int, self.time_duration.split(":"))
+    #     return self.date_of_quiz + timedelta(hours=hours, minutes=minutes)
 
 
 class QuizUpdateSchema(BaseModel):

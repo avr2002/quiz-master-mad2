@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('Quiz Dashboard'));</script>
+    <style>
+        .quiz-card {
+            transition: transform 0.2s;
+            margin-bottom: 15px;
+        }
+
+        .quiz-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .quiz-date {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .quiz-duration {
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+        }
+
+        .no-quizzes {
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .badge-ongoing {
+            background-color: #198754;
+        }
+
+        .badge-upcoming {
+            background-color: #0d6efd;
+        }
+
+        .badge-past {
+            background-color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <script src="/js/components/navigation.js"></script>
+            <script>
+                const userName = localStorage.getItem('userName');
+                document.write(getAdminNav(userName));
+            </script>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Quiz Dashboard</h2>
+        </div>
+
+        <!-- Quiz Categories Accordion -->
+        <div class="accordion" id="quizAccordion">
+            <!-- Ongoing Quizzes -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="ongoingHeading">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#ongoingCollapse" aria-expanded="true" aria-controls="ongoingCollapse">
+                        <span class="badge badge-ongoing me-2 text-white">●</span>
+                        Ongoing Quizzes
+                    </button>
+                </h2>
+                <div id="ongoingCollapse" class="accordion-collapse collapse show" aria-labelledby="ongoingHeading"
+                    data-bs-parent="#quizAccordion">
+                    <div class="accordion-body">
+                        <div id="ongoing-quizzes-container" class="row">
+                            <!-- Ongoing quizzes will be loaded here -->
+                            <div class="col-12 no-quizzes">
+                                <p>Loading ongoing quizzes...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Quizzes -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="upcomingHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#upcomingCollapse" aria-expanded="false" aria-controls="upcomingCollapse">
+                        <span class="badge badge-upcoming me-2 text-white">●</span>
+                        Upcoming Quizzes
+                    </button>
+                </h2>
+                <div id="upcomingCollapse" class="accordion-collapse collapse" aria-labelledby="upcomingHeading"
+                    data-bs-parent="#quizAccordion">
+                    <div class="accordion-body">
+                        <div id="upcoming-quizzes-container" class="row">
+                            <!-- Upcoming quizzes will be loaded here -->
+                            <div class="col-12 no-quizzes">
+                                <p>Loading upcoming quizzes...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Past Quizzes -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="pastHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#pastCollapse" aria-expanded="false" aria-controls="pastCollapse">
+                        <span class="badge badge-past me-2 text-white">●</span>
+                        Past Quizzes
+                    </button>
+                </h2>
+                <div id="pastCollapse" class="accordion-collapse collapse" aria-labelledby="pastHeading"
+                    data-bs-parent="#quizAccordion">
+                    <div class="accordion-body">
+                        <div id="past-quizzes-container" class="row">
+                            <!-- Past quizzes will be loaded here -->
+                            <div class="col-12 no-quizzes">
+                                <p>Loading past quizzes...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+    <script type="module">
+        import { getOngoingQuizzes, getUpcomingQuizzes, getPastQuizzes, formatQuizDate, formatDuration } from '/js/api/quizzes.js';
+
+        // Initialize the quizzes dashboard
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check if user is authenticated and is admin
+            if (!isAuthenticated()) {
+                window.location.href = '/pages/auth/login.html';
+                return;
+            } else if (localStorage.getItem('userRole') !== 'admin') {
+                window.location.href = '/pages/hello.html';
+                return;
+            }
+
+            // Load quizzes for each category
+            loadOngoingQuizzes();
+            loadUpcomingQuizzes();
+            loadPastQuizzes();
+        });
+
+        // Load ongoing quizzes
+        async function loadOngoingQuizzes() {
+            const container = document.getElementById('ongoing-quizzes-container');
+            try {
+                const quizzes = await getOngoingQuizzes();
+                renderQuizzes(container, quizzes, 'ongoing');
+            } catch (error) {
+                console.error('Error loading ongoing quizzes:', error);
+                container.innerHTML = `
+                    <div class="col-12 no-quizzes">
+                        <p>No ongoing quizzes found</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load upcoming quizzes
+        async function loadUpcomingQuizzes() {
+            const container = document.getElementById('upcoming-quizzes-container');
+            try {
+                const quizzes = await getUpcomingQuizzes();
+                renderQuizzes(container, quizzes, 'upcoming');
+            } catch (error) {
+                console.error('Error loading upcoming quizzes:', error);
+                container.innerHTML = `
+                    <div class="col-12 no-quizzes">
+                        <p>No upcoming quizzes found</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load past quizzes
+        async function loadPastQuizzes() {
+            const container = document.getElementById('past-quizzes-container');
+            try {
+                const quizzes = await getPastQuizzes();
+                renderQuizzes(container, quizzes, 'past');
+            } catch (error) {
+                console.error('Error loading past quizzes:', error);
+                container.innerHTML = `
+                    <div class="col-12 no-quizzes">
+                        <p>No past quizzes found</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render quizzes in the container
+        function renderQuizzes(container, quizzes, type) {
+            if (!quizzes || quizzes.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 no-quizzes">
+                        <p>No ${type} quizzes found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            quizzes.forEach(quiz => {
+                html += `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card quiz-card">
+                            <div class="card-body">
+                                <h5 class="card-title">${quiz.name}</h5>
+                                <div class="quiz-date mb-2">
+                                    <i class="bi bi-calendar-event"></i> ${formatQuizDate(quiz.date_of_quiz)}
+                                </div>
+                                <div class="quiz-duration mb-2">
+                                    <i class="bi bi-hourglass-split"></i> ${formatDuration(quiz.time_duration)}
+                                </div>
+                                <p class="card-text">${quiz.remarks || 'No additional information'}</p>
+                                <div class="d-flex justify-content-between">
+                                    <a href="/pages/admin/questions/list.html?chapter_id=${quiz.chapter_id}&quiz_id=${quiz.id}" 
+                                       class="btn btn-primary btn-sm">
+                                        <i class="bi bi-list-check"></i> View Questions
+                                    </a>
+                                    <a href="/pages/admin/quizzes/edit.html?id=${quiz.id}&chapter_id=${quiz.chapter_id}" 
+                                       class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+
+</html>

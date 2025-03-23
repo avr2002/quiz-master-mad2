@@ -2,7 +2,7 @@
 
 from http import HTTPMethod, HTTPStatus
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from quiz_api.models.database import db
@@ -89,9 +89,6 @@ def get_quiz_questions(quiz_id: int):
         "subject_id": quiz.chapter.subject_id,
         "subject_name": quiz.chapter.subject.name,
     }
-
-    current_app.logger.info(response)
-
     return jsonify(response), HTTPStatus.OK
 
 
