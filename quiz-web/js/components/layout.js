@@ -27,17 +27,15 @@ function getFooter() {
     `;
 }
 
-// Common scripts
+// Get scripts for the footer
 function getScripts() {
     return `
-        <!-- Bootstrap JS -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-        <!-- Environment & Config -->
-        <script src="/.env.js"></script>
-        <script src="/js/config.js"></script>
-
-        <!-- Custom JS -->
+        <!-- Bootstrap JS Bundle with Popper -->
+        <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Config -->
+        <script defer src="/.env.js"></script>
+        <script defer src="/js/config.js"></script>
+        <!-- Utilities -->
         <script type="module" src="/js/utils.js"></script>
     `;
 }

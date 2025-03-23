@@ -1,24 +1,14 @@
 """Admin Management Routes."""
 
-from http import (
-    HTTPMethod,
-    HTTPStatus,
-)
+from http import HTTPMethod, HTTPStatus
 
-from flask import (
-    Blueprint,
-    jsonify,
-    request,
-)
+from flask import Blueprint, jsonify, request
 from flask.typing import ResponseReturnValue
-from flask_jwt_extended import (
-    get_jwt_identity,
-    jwt_required,
-)
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from quiz_api.models.database import db
 from quiz_api.models.models import User
-from quiz_api.models.schemas import SearchSchema, UserUpdateSchema
+from quiz_api.models.schemas import SearchSchema, UserSchema, UserUpdateSchema
 from quiz_api.utils.search import search_users
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin/users")
@@ -173,12 +163,11 @@ def search_users_endpoint():
             {
                 "id": row[0],
                 "username": row[1],
-                "password": "********",  # Don't return actual password
-                "full_name": row[2],
-                "dob": row[3] if isinstance(row[3], str) else row[3].strftime("%d/%m/%Y") if row[3] else None,
-                "email": row[4],
-                "role": row[5],
-                "joined_at": row[6] if isinstance(row[6], str) else row[6].isoformat() if row[6] else None,
+                "full_name": row[3],  # idx 2 is password, idx 3 is full name
+                "dob": row[4] if isinstance(row[4], str) else row[4].strftime("%d/%m/%Y") if row[4] else None,
+                "email": row[5],
+                "role": row[6],
+                "joined_at": row[7] if isinstance(row[7], str) else row[7].isoformat() if row[7] else None,
             }
             for row in results
         ]

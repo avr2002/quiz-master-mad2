@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('User Management'));</script>
+    <style>
+        .search-bar {
+            margin-bottom: 20px;
+        }
+
+        .role-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .role-admin {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .role-user {
+            background-color: #0d6efd;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <script src="/js/components/navigation.js"></script>
+            <script>
+                const userName = localStorage.getItem('userName');
+                document.write(getAdminNav(userName));
+            </script>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>User Management</h2>
+            <a href="/pages/admin/usersSearch.html" class="btn btn-primary">
+                <i class="bi bi-search"></i> Advanced Search
+            </a>
+        </div>
+
+        <!-- Quick Search -->
+        <div class="row search-bar">
+            <div class="col-md-6 col-lg-4">
+                <div class="input-group">
+                    <input type="text" id="quick-search" class="form-control"
+                        placeholder="Quick search by name or email...">
+                    <button class="btn btn-outline-secondary" type="button" id="quick-search-btn">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Date of Birth</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Users will be loaded here -->
+                            <tr>
+                                <td colspan="8" class="text-center">Loading users...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="no-users-message" class="text-center py-4" style="display: none;">
+                    <p class="mb-0">No users found.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Details Modal -->
+    <div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userDetailsModalLabel">User Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="user-details-content">
+                    <!-- User details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+    <script type="module" src="/js/pages/users/list.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('Advanced User Search'));</script>
+    <style>
+        .search-filters {
+            background-color: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .role-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .role-admin {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .role-user {
+            background-color: #0d6efd;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <script src="/js/components/navigation.js"></script>
+            <script>
+                const userName = localStorage.getItem('userName');
+                document.write(getAdminNav(userName));
+            </script>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <!-- Page Header with Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/pages/admin/users.html">User Management</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Advanced Search</li>
+            </ol>
+        </nav>
+
+        <h2 class="mb-4">Advanced User Search</h2>
+
+        <!-- Search Filters -->
+        <div class="search-filters">
+            <form id="advanced-search-form">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="search-term" class="form-label">Search Term</label>
+                        <input type="text" class="form-control" id="search-term"
+                            placeholder="Search by name, username, or email...">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="role-filter" class="form-label">Role</label>
+                        <select class="form-select" id="role-filter">
+                            <option value="">Any Role</option>
+                            <option value="admin">Admin</option>
+                            <option value="user">User</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="join-date-from" class="form-label">Joined From</label>
+                        <input type="date" class="form-control" id="join-date-from">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="join-date-to" class="form-label">Joined To</label>
+                        <input type="date" class="form-control" id="join-date-to">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="limit" class="form-label">Results Per Page</label>
+                        <select class="form-select" id="limit">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Results Summary -->
+        <div id="results-summary" class="alert alert-info" style="display: none;">
+            <i class="bi bi-info-circle"></i> <span id="result-count">0</span> users found
+        </div>
+
+        <!-- Users Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Date of Birth</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Search results will be loaded here -->
+                            <tr>
+                                <td colspan="8" class="text-center">Start searching to see results</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="no-results-message" class="text-center py-4" style="display: none;">
+                    <p class="mb-0">No users match your search criteria.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div>
+                <span id="page-info">Page 1</span>
+            </div>
+            <div class="btn-group" role="group" aria-label="Pagination">
+                <button type="button" class="btn btn-outline-secondary" id="prev-page" disabled>
+                    <i class="bi bi-chevron-left"></i> Previous
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="next-page" disabled>
+                    Next <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Details Modal -->
+    <div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userDetailsModalLabel">User Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="user-details-content">
+                    <!-- User details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+    <script type="module" src="/js/pages/users/search.js"></script>
+</body>
+
+</html>
