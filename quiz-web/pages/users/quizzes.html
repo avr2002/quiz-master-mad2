@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('Available Quizzes'));</script>
+    <link rel="stylesheet" href="/css/quiz-pages.css">
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <script src="/js/components/navigation.js"></script>
+            <script>
+                const userName = localStorage.getItem('userName');
+                document.write(getUserNav(userName));
+            </script>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Available Quizzes</h2>
+        </div>
+
+        <!-- Quiz Categories Accordion -->
+        <div class="accordion" id="quizAccordion">
+            <!-- Ongoing Quizzes -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="ongoingHeading">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#ongoingCollapse" aria-expanded="true" aria-controls="ongoingCollapse">
+                        <span class="badge badge-ongoing me-2 text-white">●</span>
+                        Ongoing Quizzes
+                    </button>
+                </h2>
+                <div id="ongoingCollapse" class="accordion-collapse collapse show" aria-labelledby="ongoingHeading"
+                    data-bs-parent="#quizAccordion">
+                    <div class="accordion-body">
+                        <div id="ongoing-quizzes-container" class="row">
+                            <!-- Ongoing quizzes will be loaded here -->
+                            <div class="col-12 no-quizzes">
+                                <p>Loading ongoing quizzes...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Quizzes -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="upcomingHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#upcomingCollapse" aria-expanded="false" aria-controls="upcomingCollapse">
+                        <span class="badge badge-upcoming me-2 text-white">●</span>
+                        Upcoming Quizzes
+                    </button>
+                </h2>
+                <div id="upcomingCollapse" class="accordion-collapse collapse" aria-labelledby="upcomingHeading"
+                    data-bs-parent="#quizAccordion">
+                    <div class="accordion-body">
+                        <div id="upcoming-quizzes-container" class="row">
+                            <!-- Upcoming quizzes will be loaded here -->
+                            <div class="col-12 no-quizzes">
+                                <p>Loading upcoming quizzes...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Past Quizzes -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="pastHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#pastCollapse" aria-expanded="false" aria-controls="pastCollapse">
+                        <span class="badge badge-past me-2 text-white">●</span>
+                        Past Quizzes
+                    </button>
+                </h2>
+                <div id="pastCollapse" class="accordion-collapse collapse" aria-labelledby="pastHeading"
+                    data-bs-parent="#quizAccordion">
+                    <div class="accordion-body">
+                        <div id="past-quizzes-container" class="row">
+                            <!-- Past quizzes will be loaded here -->
+                            <div class="col-12 no-quizzes">
+                                <p>Loading past quizzes...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+    <script type="module">
+        import { getOngoingQuizzes, getUpcomingQuizzes, getPastQuizzes, formatQuizDate, formatDuration } from '/js/api/quizzes.js';
+        import { signupForQuiz } from '/js/api/quiz_registration.js';
+        import { getSubject } from '/js/api/subjects.js';
+
+        // Initialize the quizzes dashboard
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check if user is authenticated
+            if (!isAuthenticated()) {
+                window.location.href = '/pages/auth/login.html';
+                return;
+            } else if (localStorage.getItem('userRole') === 'admin') {
+                window.location.href = '/pages/admin/quizzes.html';
+                return;
+            }
+
+            // Load quizzes for each category
+            loadOngoingQuizzes();
+            loadUpcomingQuizzes();
+            loadPastQuizzes();
+        });
+
+        // Load ongoing quizzes
+        async function loadOngoingQuizzes() {
+            const container = document.getElementById('ongoing-quizzes-container');
+            try {
+                const quizzes = await getOngoingQuizzes();
+                renderQuizzes(container, quizzes, 'ongoing');
+            } catch (error) {
+                console.error('Error loading ongoing quizzes:', error);
+                container.innerHTML = `
+                    <div class="col-12 no-quizzes">
+                        <p>No ongoing quizzes found</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load upcoming quizzes
+        async function loadUpcomingQuizzes() {
+            const container = document.getElementById('upcoming-quizzes-container');
+            try {
+                const quizzes = await getUpcomingQuizzes();
+                renderQuizzes(container, quizzes, 'upcoming');
+            } catch (error) {
+                console.error('Error loading upcoming quizzes:', error);
+                container.innerHTML = `
+                    <div class="col-12 no-quizzes">
+                        <p>No upcoming quizzes found</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load past quizzes
+        async function loadPastQuizzes() {
+            const container = document.getElementById('past-quizzes-container');
+            try {
+                const quizzes = await getPastQuizzes();
+                renderQuizzes(container, quizzes, 'past');
+            } catch (error) {
+                console.error('Error loading past quizzes:', error);
+                container.innerHTML = `
+                    <div class="col-12 no-quizzes">
+                        <p>No past quizzes found</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render quizzes in the container
+        async function renderQuizzes(container, quizzes, type) {
+            if (!quizzes || quizzes.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 no-quizzes">
+                        <p>No ${type} quizzes found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            quizzes.forEach((quiz) => {
+                const signupButton = type === 'upcoming' ?
+                    `<button onclick="signUpForQuiz(${quiz.id})" class="btn btn-success btn-sm signup-btn">
+                        <i class="bi bi-person-plus"></i> Sign Up
+                     </button>` : '';
+
+                const viewQuestionsButton = type === 'past' ?
+                    `<a href="/pages/users/questions/list-past-quiz-questions.html?quiz_id=${quiz.id}" class="btn btn-info btn-sm text-white">
+                        <i class="bi bi-question-circle"></i> View Questions
+                     </a>` : '';
+
+                const takeQuizButton = type === 'ongoing' ?
+                    `<a href="/pages/users/take-quiz.html?quiz_id=${quiz.id}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-pencil-square"></i> Take Quiz
+                     </a>` : '';
+
+                html += `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card quiz-card">
+                            <div class="card-body">
+                                <h5 class="card-title">${quiz.name}</h5>
+                                <div class="quiz-subject mb-2">
+                                    <i class="bi bi-book"></i> ${quiz.subject_name}
+                                </div>
+                                <div class="quiz-chapter mb-2">
+                                    <i class="bi bi-bookmark"></i> ${quiz.chapter_name}
+                                </div>
+                                <div class="quiz-date mb-2">
+                                    <i class="bi bi-calendar-event"></i> ${formatQuizDate(quiz.date_of_quiz)}
+                                </div>
+                                <div class="quiz-duration mb-2">
+                                    <i class="bi bi-hourglass-split"></i> ${formatDuration(quiz.time_duration)}
+                                </div>
+                                <p class="card-text">${quiz.remarks || 'No additional information'}</p>
+                                <div class="d-flex justify-content-between">
+                                    <div></div>
+                                    ${takeQuizButton}
+                                    ${signupButton}
+                                    ${viewQuestionsButton}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Make the signup function available globally
+        window.signUpForQuiz = async function (quizId) {
+            try {
+                await signupForQuiz(quizId);
+                showSuccess('Successfully signed up for the quiz!');
+                // Reload upcoming quizzes to reflect changes
+                loadUpcomingQuizzes();
+            } catch (error) {
+                showError(error.message || 'Failed to sign up for quiz');
+            }
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('Past Quiz Questions'));</script>
+    <style>
+        .option-list {
+            margin-bottom: 0;
+            padding-left: 1.5rem;
+        }
+
+        .correct-option {
+            font-weight: bold;
+            color: #198754;
+        }
+
+        .quiz-stats .badge {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.6rem;
+        }
+
+        .quiz-stats i {
+            margin-right: 0.3rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <script src="/js/components/navigation.js"></script>
+            <script>
+                const userName = localStorage.getItem('userName');
+                document.write(getUserNav(userName));
+            </script>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <!-- Breadcrumb Navigation -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/pages/users/quizzes.html">Quizzes</a></li>
+                <li class="breadcrumb-item" id="quiz-breadcrumb"></li>
+                <li class="breadcrumb-item active" aria-current="page">Questions</li>
+            </ol>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 id="quiz-title">Quiz Questions</h2>
+                <p id="quiz-details" class="text-muted"></p>
+                <div class="quiz-stats mt-2">
+                    <span class="badge bg-primary me-2">
+                        <i class="bi bi-list-check"></i>
+                        Total Questions: <span id="total-questions">0</span>
+                    </span>
+                    <span class="badge bg-success">
+                        <i class="bi bi-trophy"></i>
+                        Total Score: <span id="total-score">0</span> points
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table" id="questionsTable">
+                        <thead>
+                            <tr>
+                                <th width="40%">Question</th>
+                                <th>Options</th>
+                                <th>Points</th>
+                            </tr>
+                        </thead>
+                        <tbody id="questionsTableBody">
+                            <!-- Questions will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+    <!-- TODO: Later move this to a separate logical js file -->
+    <script type="module">
+        import { getQuizQuestions } from '/js/api/questions.js';
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', initPastQuestionsList);
+
+        async function initPastQuestionsList() {
+            // Check if user is authenticated
+            if (!isAuthenticated()) {
+                window.location.href = '/pages/auth/login.html';
+                return;
+            } else if (localStorage.getItem('userRole') === 'admin') {
+                window.location.href = '/pages/admin/quizzes.html';
+                return;
+            }
+
+            // Get quiz ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const quizId = urlParams.get('quiz_id');
+
+            if (!quizId) {
+                showError('No quiz ID provided');
+                return;
+            }
+
+            // Load quiz questions
+            try {
+                // Using the getQuizQuestions function from questions.js
+                const data = await getQuizQuestions(quizId);
+                displayQuizData(data, quizId);
+            } catch (error) {
+                showError(error.message || 'Failed to load quiz questions');
+            }
+        }
+
+        function displayQuizData(data, quizId) {
+            // Update page title and details
+            document.getElementById('quiz-title').textContent = `Questions for ${data.quiz_name}`;
+            document.getElementById('quiz-details').textContent = `Subject: ${data.subject_name} | Chapter: ${data.chapter_name}`;
+
+            // Update the breadcrumb navigation
+            document.getElementById('quiz-breadcrumb').textContent = data.quiz_name;
+
+            // Update the quiz stats
+            document.getElementById('total-questions').textContent = data.number_of_questions;
+            document.getElementById('total-score').textContent = data.total_quiz_score;
+
+            // Display the questions
+            renderQuestionsTable(data.questions);
+        }
+
+        function renderQuestionsTable(questions) {
+            const tableBody = document.getElementById('questionsTableBody');
+
+            if (!questions || questions.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center">No questions found for this quiz</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            questions.forEach(question => {
+                html += `
+                    <tr>
+                        <td>${question.question_statement}</td>
+                        <td>
+                            <ol class="option-list">
+                                <li class="${question.correct_option === 1 ? 'correct-option' : ''}">${question.option1}</li>
+                                <li class="${question.correct_option === 2 ? 'correct-option' : ''}">${question.option2}</li>
+                                <li class="${question.correct_option === 3 ? 'correct-option' : ''}">${question.option3}</li>
+                                <li class="${question.correct_option === 4 ? 'correct-option' : ''}">${question.option4}</li>
+                            </ol>
+                        </td>
+                        <td>${question.points}</td>
+                    </tr>
+                `;
+            });
+
+            tableBody.innerHTML = html;
+        }
+    </script>
+</body>
+
+</html>
