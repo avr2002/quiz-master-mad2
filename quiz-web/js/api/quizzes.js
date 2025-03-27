@@ -243,24 +243,4 @@ export async function getOngoingQuizzes() {
         console.error('Error fetching ongoing quizzes:', error);
         throw error;
     }
-}
-
-/**
- * Get all quizzes attempted by the current user
- * @returns {Promise<Array>} - Array of quiz score objects
- */
-export async function getUserQuizzes() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/quizzes/user`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-
-        return await handleApiResponse(response);
-    } catch (error) {
-        console.error('Error fetching user quizzes:', error);
-        throw error;
-    }
 } 
