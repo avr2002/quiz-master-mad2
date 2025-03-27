@@ -12,12 +12,15 @@ function getBaseNav() {
 function getHomeNav() {
     if (localStorage.getItem('token')) {
         const userName = localStorage.getItem('userName');
+        // Get the user's full name from localStorage if available
+        const fullName = localStorage.getItem('userFullName') || userName;
+
         return `
             ${getBaseNav()}
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <span class="nav-link text-light">Welcome, ${userName}</span>
+                        <span class="nav-link text-light">Welcome, ${fullName}</span>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/pages/profile.html">Profile</a>
@@ -52,6 +55,9 @@ function getAuthNav() {
 
 // Admin navigation
 function getAdminNav(userName) {
+    // Get the user's full name from localStorage if available
+    const fullName = localStorage.getItem('userFullName') || userName;
+
     return `
         ${getBaseNav()}
         <div class="collapse navbar-collapse" id="navbarNav">
@@ -71,7 +77,7 @@ function getAdminNav(userName) {
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <span class="nav-link text-light">Welcome, ${userName}</span>
+                    <span class="nav-link text-light">Welcome, ${fullName}</span>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/pages/profile.html">Profile</a>
@@ -86,23 +92,26 @@ function getAdminNav(userName) {
 
 // User navigation
 function getUserNav(userName) {
+    // Get the user's full name from localStorage if available
+    const fullName = localStorage.getItem('userFullName') || userName;
+
     return `
         ${getBaseNav()}
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/quizzes.html">Quizzes</a>
+                    <a class="nav-link" href="/pages/users/quizzes.html">Quizzes</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/leaderboard.html">Leaderboard</a>
+                    <a class="nav-link" href="/pages/users/my-quizzes.html">My Quizzes</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/my-scores.html">My Scores</a>
+                    <a class="nav-link" href="#">Subjects</a>
                 </li>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <span class="nav-link text-light">Welcome, ${userName}</span>
+                    <span class="nav-link text-light">Welcome, ${fullName}</span>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/pages/profile.html">Profile</a>
@@ -126,6 +135,7 @@ function logout() {
         localStorage.removeItem('token');
         localStorage.removeItem('userRole');
         localStorage.removeItem('userName');
+        localStorage.removeItem('userFullName');
         window.location.href = '/index.html';
     }
 }

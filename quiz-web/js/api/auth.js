@@ -37,6 +37,7 @@ export async function login({ email, username, password }) {
         localStorage.setItem('token', data.access_token);
         localStorage.setItem('userRole', data.user.role);
         localStorage.setItem('userName', data.user.username);
+        localStorage.setItem('userFullName', data.user.full_name);
         return data;
     } catch (error) {
         console.error('Login error:', error);

@@ -14,6 +14,7 @@
             <script>
                 const userRole = localStorage.getItem('userRole');
                 const userName = localStorage.getItem('userName');
+                const fullName = localStorage.getItem('userFullName') || userName;
                 document.write(
                     userRole === 'admin'
                         ? getAdminNav(userName)
@@ -29,8 +30,8 @@
 
         <div class="card">
             <div class="card-body text-center">
-                <h1>Hello, <span id="userName">User</span>!</h1>
-                <p>You have successfully logged in.</p>
+                <h1>Hello, <span id="user">User</span>!</h1>
+                <p>Welcome to the Quiz Master!</p>
                 <button onclick="logout()" class="btn btn-danger">Logout</button>
             </div>
         </div>
@@ -38,11 +39,19 @@
 
     <script>document.write(getFooter());</script>
     <script>document.write(getScripts());</script>
+    <script src="/js/utils.js" type="module"></script>
     <script>
-        // Check if user is authenticated
-        if (!isAuthenticated()) {
-            window.location.href = '/pages/auth/login.html';
-        }
+        // Wait for DOM content to be loaded
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check if user is authenticated
+            if (localStorage.getItem('token') === null) {
+                window.location.href = '/pages/auth/login.html';
+            } else {
+                // Update the user span with the full name
+                const fullName = localStorage.getItem('userFullName') || localStorage.getItem('userName');
+                document.getElementById('user').textContent = fullName;
+            }
+        });
     </script>
 </body>
 
