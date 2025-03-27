@@ -148,7 +148,6 @@ class QuestionSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     quiz_id: int = Field(..., gt=0)
-    id: int = Field(..., gt=0)  # question ID
     question_statement: str = Field(..., min_length=1)
     option1: str = Field(..., min_length=1)
     option2: str = Field(..., min_length=1)
