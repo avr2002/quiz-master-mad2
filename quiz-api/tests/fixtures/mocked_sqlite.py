@@ -115,7 +115,7 @@ def question(setup_database, quiz: Quiz) -> Question:
 @pytest.fixture
 def score(setup_database, quiz: Quiz, regular_user: User) -> Score:
     """Create a test score."""
-    score: Score = Score(quiz_id=quiz.id, user_id=regular_user.id, total_score=2, timestamp=datetime.now(timezone.utc))
+    score: Score = Score(quiz_id=quiz.id, user_id=regular_user.id, user_score=2)
     setup_database.add(score)
     setup_database.commit()
     return score

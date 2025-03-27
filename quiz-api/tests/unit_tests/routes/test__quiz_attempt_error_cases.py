@@ -54,7 +54,7 @@ def test_view_other_user_scores(client: FlaskClient, user_token: str, admin_user
 def test_view_other_user_score_details(client: FlaskClient, user_token: str, score: Score, admin_user: User) -> None:
     """Test that users cannot view other users' score details."""
     # Create a score for admin user
-    admin_score = Score(quiz_id=score.quiz_id, user_id=admin_user.id, total_score=3)
+    admin_score = Score(quiz_id=score.quiz_id, user_id=admin_user.id, user_score=3)
     db.session.add(admin_score)
     db.session.commit()
 

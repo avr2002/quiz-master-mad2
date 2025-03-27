@@ -34,7 +34,7 @@ def test_submit_quiz_answers(client: FlaskClient, user_token: str, quiz: Quiz, q
     assert response.status_code == HTTPStatus.OK
     assert response.json["message"] == "Quiz submitted successfully"
     assert response.json["correct_answers"] == 1
-    assert response.json["score"]["total_score"] == 2
+    assert response.json["score"]["user_score"] == 2
 
 
 def test_get_user_scores(client: FlaskClient, user_token: str, regular_user: User, score: Score) -> None:
@@ -43,12 +43,13 @@ def test_get_user_scores(client: FlaskClient, user_token: str, regular_user: Use
 
     assert response.status_code == HTTPStatus.OK
     assert len(response.json) >= 1
-    assert response.json[0]["total_score"] == 2
+    assert response.json[0]["user_score"] == 2
 
 
-def test_get_score_details(client: FlaskClient, user_token: str, score: Score) -> None:
-    """Test getting specific score details."""
-    response = client.get(f"/scores/{score.id}", headers={"Authorization": f"Bearer {user_token}"})
+# Endpoint Deprecated
+# def test_get_score_details(client: FlaskClient, user_token: str, score: Score) -> None:
+#     """Test getting specific score details."""
+#     response = client.get(f"/scores/{score.id}", headers={"Authorization": f"Bearer {user_token}"})
 
-    assert response.status_code == HTTPStatus.OK
-    assert response.json["total_score"] == 2
+#     assert response.status_code == HTTPStatus.OK
+#     assert response.json["user_score"] == 2

@@ -88,7 +88,31 @@ Stores user quiz scores.
 
 ---
 
-#### 7. **Cache (Redis)**
+#### 7. **QuizSignups**
+Tracks user registrations for quizzes.
+
+| Column Name   | Data Type | Constraints                                     |
+| ------------- | --------- | ----------------------------------------------- |
+| `user_id`     | INTEGER   | PRIMARY KEY, FOREIGN KEY REFERENCES Users(id)   |
+| `quiz_id`     | INTEGER   | PRIMARY KEY, FOREIGN KEY REFERENCES Quizzes(id) |
+| `signup_time` | DATETIME  | NOT NULL, DEFAULT CURRENT_TIMESTAMP             |
+
+---
+
+#### 8. **QuestionAttempts**
+Stores details of each question attempt by users.
+
+| Column Name       | Data Type | Constraints                                    |
+| ----------------- | --------- | ---------------------------------------------- |
+| `id`              | INTEGER   | PRIMARY KEY, AUTOINCREMENT                     |
+| `score_id`        | INTEGER   | FOREIGN KEY REFERENCES Scores(id), NOT NULL    |
+| `question_id`     | INTEGER   | FOREIGN KEY REFERENCES Questions(id), NOT NULL |
+| `selected_option` | INTEGER   | NOT NULL                                       |
+| `is_correct`      | BOOLEAN   | NOT NULL                                       |
+
+---
+
+#### 9. **Cache (Redis)**
 For caching quiz data and user progress.
 
 - **Key:** User or quiz identifier
@@ -112,15 +136,21 @@ For caching quiz data and user progress.
 ```mermaid
 graph TD
     User -- 1:N --> Score
+    User -- 1:N --> QuizSignup
     Subject -- 1:N --> Chapter
     Chapter -- 1:N --> Quiz
     Quiz -- 1:N --> Question
     Quiz -- 1:N --> Score
+    Quiz -- 1:N --> QuizSignup
     Score -- N:1 --> User
     Score -- N:1 --> Quiz
+    Score -- 1:N --> QuestionAttempt
     Question -- N:1 --> Quiz
-    Quiz -- N:1 --> Chapter
-    Chapter -- N:1 --> Subject
+    Question -- 1:N --> QuestionAttempt
+    QuestionAttempt -- N:1 --> Score
+    QuestionAttempt -- N:1 --> Question
+    QuizSignup -- N:1 --> User
+    QuizSignup -- N:1 --> Quiz
 ```
 
 ### User
@@ -135,6 +165,10 @@ graph TD
   - joined_at (timestamp)
 - Relationships:
   - Has many Scores (one-to-many)
+  - Has many QuizSignups (one-to-many)
+- Helper Properties:
+  - quizzes - List of quizzes user has signed up for
+  - total_score_across_all_quizzes - Sum of user's scores across all quizzes
 
 ### Subject
 - Primary key: id
@@ -162,13 +196,24 @@ graph TD
 - Primary key: id
 - Fields:
   - chapter_id (foreign key)
+  - name (required)
   - date_of_quiz (required)
   - time_duration (format: 'HH:MM', required)
   - remarks (optional)
+  - created_at (timestamp)
+  - updated_at (timestamp)
 - Relationships:
   - Belongs to one Chapter (many-to-one)
   - Has many Questions (one-to-many)
   - Has many Scores (one-to-many)
+  - Has many QuizSignups (one-to-many)
+- Helper Properties:
+  - signups - List of users who signed up for the quiz
+  - end_time - Calculated end time based on date and duration
+  - total_quiz_score - Sum of all question points in the quiz
+  - number_of_questions - Count of questions in the quiz
+  - is_upcoming - Whether quiz is in the future
+  - is_active - Whether quiz is currently active
 
 ### Question
 - Primary key: id
@@ -187,13 +232,37 @@ graph TD
   - quiz_id (foreign key)
   - user_id (foreign key)
   - timestamp (auto-set)
-  - total_score (required)
+  - user_score (required) - Points scored by user
+  - number_of_correct_answers (required) - Count of correct answers
 - Relationships:
   - Belongs to one Quiz (many-to-one)
   - Belongs to one User (many-to-one)
+  - Has many QuestionAttempts (one-to-many)
+
+### QuizSignup
+- Composite Primary Key: (user_id, quiz_id)
+- Fields:
+  - user_id (foreign key, part of primary key)
+  - quiz_id (foreign key, part of primary key)
+  - signup_time (timestamp)
+- Relationships:
+  - Belongs to one User (many-to-one)
+  - Belongs to one Quiz (many-to-one)
+
+### QuestionAttempt
+- Primary key: id
+- Fields:
+  - score_id (foreign key)
+  - question_id (foreign key)
+  - selected_option (required) - User's selected answer (1-4)
+  - is_correct (required) - Whether the answer was correct
+- Relationships:
+  - Belongs to one Score (many-to-one)
+  - Belongs to one Question (many-to-one)
 
 ## Cascade Behavior
 - When a Subject is deleted, all its Chapters are deleted
 - When a Chapter is deleted, all its Quizzes are deleted
-- When a Quiz is deleted, all its Questions and Scores are deleted
-- When a User is deleted, all their Scores are deleted
+- When a Quiz is deleted, all its Questions, Scores, and QuizSignups are deleted
+- When a User is deleted, all their Scores and QuizSignups are deleted
+- When a Score is deleted, all its QuestionAttempts are deleted

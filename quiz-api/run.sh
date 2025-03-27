@@ -12,7 +12,8 @@ function install {
 
 # run the Flask application
 function run {
-    try-load-dotenv || true
+    # try-load-dotenv || true
+    source "$THIS_DIR/.env"
     uv run -m quiz_api.main
     # uv run gunicorn quiz_api.main:app --reload
 }

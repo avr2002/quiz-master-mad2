@@ -180,21 +180,30 @@
 ## **7. Quiz Attempts & Scoring**
 
 **Endpoints**
-- `GET /quizzes/{quiz_id}/attempt` → Start a quiz attempt
+- `GET /quiz/{quiz_id}/attempt` → Start a quiz attempt
   - Returns questions without correct answers
-  - Returns total questions count and points per question
+  - Returns total questions count, points per question, and quiz metadata
   - Requires authentication
-  - Validates quiz existence
-- `POST /quizzes/{quiz_id}/submit` → Submit quiz answers
+  - Validates quiz existence and active status
+- `POST /quiz/{quiz_id}/submit` → Submit quiz answers
   - Requires quiz_id and list of answers
   - Each answer needs question_id and selected_option
+  - Records detailed answer attempts in the database
   - Returns score details and statistics
+- `GET /quiz/{quiz_id}/results` → Get detailed quiz results with answers
+  - Returns complete question details with user answers and correct answers
+  - Shows points per question and correctness status
+  - Only accessible by the user who took the quiz
+- `GET /quiz/{quiz_id}/score` → Get score summary for a quiz
+  - Returns quiz metadata and score summary
+  - Shows total questions, correct answers, and scores
+  - Only accessible by the user who took the quiz
+- `GET /quiz/attempts/history` → Get all quiz attempts by current user
+  - Returns complete history of all quizzes attempted by the user
+  - Includes quiz details and score information
+  - Only accessible by the user who took the quizzes
 - `GET /users/{user_id}/scores` → Get user's quiz history
   - Returns list of all attempts by user
-  - Users can only view their own scores
-  - Admin can view all scores
-- `GET /scores/{score_id}` → Get specific score details
-  - Returns full details of a quiz attempt
   - Users can only view their own scores
   - Admin can view all scores
 
@@ -205,11 +214,7 @@
   - Number of correct answers
   - Total points earned
 - Points per question shown upfront to help users prioritize
-
-**Data Security**
-- Correct answers hidden until quiz submission
-- Score records are user-specific
-- Historical attempts preserved
+- All user answer choices are stored for detailed reporting
 
 ---
 
@@ -246,6 +251,34 @@
 **Endpoints**
 - `GET /healthcheck` → API health check endpoint
 - `GET /stats` → Get overall platform statistics (subjects, users, quizzes, etc.)
+
+---
+
+## **11. Quiz Registration**
+
+**Endpoints**
+- `POST /quiz-registration/{quiz_id}/signup` → Sign up for an upcoming quiz
+  - Validates quiz existence and upcoming status
+  - Prevents duplicate signups
+  - Only available to non-admin users
+  - Returns confirmation of signup
+- `DELETE /quiz-registration/{quiz_id}/cancel` → Cancel a quiz registration
+  - Validates quiz existence and upcoming status
+  - Only cancels if user is already signed up
+  - Only available to the registered user
+  - Returns confirmation of cancellation
+- `GET /users/quizzes/signups` → Get all quizzes the user has signed up for
+  - Lists upcoming, active, and completed quizzes
+  - Includes quiz metadata and user score if attempted
+  - Categorizes quizzes by status (upcoming/active/completed)
+  - Shows chapter and subject information for each quiz
+
+**Registration Logic**
+- Users can only sign up for upcoming quizzes
+- Quiz signup status is maintained separately from attempts
+- Registration timestamps are recorded
+- Users can see all quizzes they signed up for, including those not yet attempted
+- Status of quizzes (upcoming/active/completed) is dynamically calculated
 
 ---
 

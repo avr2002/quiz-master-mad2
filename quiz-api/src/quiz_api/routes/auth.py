@@ -1,32 +1,19 @@
 """Authentication Routes (User Registration, Login, and Current User Info)"""
 
 import datetime
-from http import (
-    HTTPMethod,
-    HTTPStatus,
-)
+from http import HTTPMethod, HTTPStatus
 
-from flask import (
-    Blueprint,
-    jsonify,
-    request,
-)
+from flask import Blueprint, jsonify, request
 from flask.typing import ResponseReturnValue
-from flask_jwt_extended import (
-    create_access_token,
-    get_jwt,
-    get_jwt_identity,
-    jwt_required,
-)
-from werkzeug.security import (
-    check_password_hash,
-    generate_password_hash,
-)
+from flask_jwt_extended import create_access_token, get_jwt, get_jwt_identity, jwt_required
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from quiz_api.models.database import db
 from quiz_api.models.models import User
 from quiz_api.models.schemas import UserSchema, UserUpdateSchema
 from quiz_api.utils import add_token_to_blacklist
+
+JWT_EXPIRATION_TIME_IN_HOURS = 1
 
 auth_bp: Blueprint = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -105,16 +92,22 @@ def login() -> ResponseReturnValue:
     # Convert user.id to string otherwise I get "Subject must be a string" error while logging
     # in `get_current_user` due to @jwt_required()
     # Flask-JWT-Extended expects the identity to be a string, but we were passing user.id as an integer.
-    access_token = create_access_token(identity=str(user.id), expires_delta=datetime.timedelta(hours=1))
-    return (
-        jsonify(
-            {
-                "access_token": access_token,
-                "user": {"id": user.id, "email": user.email, "username": user.username, "role": user.role},
-            }
-        ),
-        HTTPStatus.OK,
+    access_token = create_access_token(
+        identity=str(user.id),
+        expires_delta=datetime.timedelta(hours=JWT_EXPIRATION_TIME_IN_HOURS),
     )
+
+    response = {
+        "access_token": access_token,
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "username": user.username,
+            "full_name": user.full_name,
+            "role": user.role,
+        },
+    }
+    return jsonify(response), HTTPStatus.OK
 
 
 @auth_bp.route("/me", methods=[HTTPMethod.GET])

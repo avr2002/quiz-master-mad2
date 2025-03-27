@@ -3,7 +3,7 @@
 from datetime import date, datetime, timedelta, timezone
 from typing import List
 
-from sqlalchemy import ForeignKey, String, Text, func
+from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -11,6 +11,8 @@ from quiz_api.models.database import db
 
 
 class User(db.Model):
+    """User database model."""
+
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -24,9 +26,23 @@ class User(db.Model):
 
     # Relationships
     scores: Mapped[List["Score"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    quiz_signups: Mapped[List["QuizSignup"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+
+    # Helper property to access quizzes directly
+    @hybrid_property
+    def quizzes(self):
+        """Get quizzes the user has signed up for."""
+        return [signup.quiz for signup in self.quiz_signups]
+
+    @hybrid_property
+    def total_score_across_all_quizzes(self) -> int:
+        """Calculate the total score of the user across all quizzes."""
+        return sum(score.user_score for score in self.scores)
 
 
 class Subject(db.Model):
+    """Subject database model."""
+
     __tablename__ = "subjects"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -42,6 +58,8 @@ class Subject(db.Model):
 
 
 class Chapter(db.Model):
+    """Chapter database model."""
+
     __tablename__ = "chapters"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -57,6 +75,8 @@ class Chapter(db.Model):
 
 
 class Quiz(db.Model):
+    """Quiz database model."""
+
     __tablename__ = "quizzes"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -72,6 +92,13 @@ class Quiz(db.Model):
     chapter: Mapped["Chapter"] = relationship(back_populates="quizzes")
     questions: Mapped[List["Question"]] = relationship(back_populates="quiz", cascade="all, delete-orphan")
     scores: Mapped[List["Score"]] = relationship(back_populates="quiz", cascade="all, delete-orphan")
+    user_signups: Mapped[List["QuizSignup"]] = relationship(back_populates="quiz", cascade="all, delete-orphan")
+
+    # Helper properties
+    @hybrid_property
+    def signups(self):
+        """Get users signed up for this quiz."""
+        return [signup.user for signup in self.user_signups]
 
     @hybrid_property
     def end_time(self) -> datetime | None:
@@ -81,8 +108,30 @@ class Quiz(db.Model):
             return self.date_of_quiz + timedelta(hours=hours, minutes=minutes)
         return None
 
+    @hybrid_property
+    def total_quiz_score(self) -> int:
+        """Calculate the total score of the quiz."""
+        return sum(question.points for question in self.questions)
+
+    @hybrid_property
+    def number_of_questions(self) -> int:
+        """Calculate the number of questions in the quiz."""
+        return len(self.questions)
+
+    @hybrid_property
+    def is_upcoming(self) -> bool:
+        """Check if the quiz is upcoming."""
+        return self.date_of_quiz > datetime.now(timezone.utc)
+
+    @hybrid_property
+    def is_active(self) -> bool:
+        """Check if the quiz is active."""
+        return self.date_of_quiz <= datetime.now(timezone.utc) <= self.end_time
+
 
 class Question(db.Model):
+    """Question database model."""
+
     __tablename__ = "questions"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -100,14 +149,51 @@ class Question(db.Model):
 
 
 class Score(db.Model):
+    """Score database model."""
+
     __tablename__ = "scores"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     quiz_id: Mapped[int] = mapped_column(ForeignKey("quizzes.id"), nullable=False, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
-    timestamp: Mapped[datetime] = mapped_column(default=func.current_timestamp(), index=True)
-    total_score: Mapped[int] = mapped_column(nullable=False)
+    # timestamp <-- The time at which the score was recorded
+    timestamp: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc), index=False)
+    user_score: Mapped[int] = mapped_column(nullable=False)
+    number_of_correct_answers: Mapped[int] = mapped_column(nullable=False)
 
     # Relationships
     quiz: Mapped["Quiz"] = relationship(back_populates="scores")
     user: Mapped["User"] = relationship(back_populates="scores")
+    question_attempts: Mapped[List["QuestionAttempt"]] = relationship(
+        back_populates="score", cascade="all, delete-orphan"
+    )
+
+
+class QuizSignup(db.Model):
+    """Association model for user quiz signups."""
+
+    __tablename__ = "quiz_signups"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    quiz_id: Mapped[int] = mapped_column(ForeignKey("quizzes.id"), primary_key=True)
+    signup_time: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="quiz_signups")
+    quiz: Mapped["Quiz"] = relationship("Quiz", back_populates="user_signups")
+
+
+class QuestionAttempt(db.Model):
+    """Model to store user's selected answers for questions."""
+
+    __tablename__ = "question_attempts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    score_id: Mapped[int] = mapped_column(ForeignKey("scores.id"), nullable=False, index=True)
+    question_id: Mapped[int] = mapped_column(ForeignKey("questions.id"), nullable=False)
+    selected_option: Mapped[int] = mapped_column(nullable=False)  # 1-4 representing user's choice
+    is_correct: Mapped[bool] = mapped_column(nullable=False)  # Whether the selected answer was correct
+
+    # Relationships
+    score: Mapped["Score"] = relationship(back_populates="question_attempts")
+    question: Mapped["Question"] = relationship("Question")

@@ -186,7 +186,8 @@ class ScoreSchema(BaseModel):
 
     quiz_id: int = Field(..., gt=0)
     user_id: int = Field(..., gt=0)
-    total_score: int = Field(..., ge=0)
+    user_score: int = Field(..., ge=0)
+    number_of_correct_answers: int = Field(..., ge=0)
     timestamp: datetime | None = None
 
 
@@ -205,3 +206,13 @@ class QuizAttemptSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     answers: list[QuizAnswerSchema]
+
+
+class QuizSignupSchema(BaseModel):
+    """Schema for quiz signup."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    quiz_id: int = Field(..., gt=0)
+    user_id: int = Field(..., gt=0)
+    signup_time: datetime | None = None
