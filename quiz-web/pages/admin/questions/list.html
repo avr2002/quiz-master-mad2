@@ -14,6 +14,15 @@
             font-weight: bold;
             color: #198754;
         }
+
+        .quiz-stats .badge {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.6rem;
+        }
+
+        .quiz-stats i {
+            margin-right: 0.3rem;
+        }
     </style>
 </head>
 
@@ -48,6 +57,16 @@
             <div>
                 <h2 id="quiz-title">Questions</h2>
                 <p id="quiz-details" class="text-muted"></p>
+                <div class="quiz-stats mt-2">
+                    <span class="badge bg-primary me-2">
+                        <i class="bi bi-list-check"></i>
+                        Total Questions: <span id="total-questions">0</span>
+                    </span>
+                    <span class="badge bg-success">
+                        <i class="bi bi-trophy"></i>
+                        Total Score: <span id="total-score">0</span> points
+                    </span>
+                </div>
             </div>
             <button class="btn btn-primary" id="add-question-btn">
                 Add Question(s)
