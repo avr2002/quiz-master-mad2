@@ -112,7 +112,7 @@ async function loadQuestions(quizId) {
             }
         }
 
-        renderQuestions(response.questions, quizId);
+        displayQuizData(response);
     } catch (error) {
         console.error('Error loading questions:', error);
         showError('Failed to load questions');
@@ -254,4 +254,21 @@ async function handleDelete(questionId) {
 }
 
 // Make handleDelete available globally
-window.handleDelete = handleDelete; 
+window.handleDelete = handleDelete;
+
+function displayQuizData(data) {
+    // Update existing elements
+    document.getElementById('quiz-title').textContent = `Questions for ${data.quiz_name}`;
+    document.getElementById('quiz-details').textContent = `Subject: ${data.subject_name} | Chapter: ${data.chapter_name}`;
+
+    // Update the breadcrumb navigation
+    document.getElementById('chapter-breadcrumb').innerHTML = `<a href="/pages/admin/chapters/list.html?subject_id=${data.subject_id}">${data.chapter_name}</a>`;
+    document.getElementById('quiz-breadcrumb').innerHTML = `<a href="/pages/admin/quizzes/list.html?chapter_id=${data.chapter_id}">${data.quiz_name}</a>`;
+
+    // Update the quiz stats
+    document.getElementById('total-questions').textContent = data.number_of_questions;
+    document.getElementById('total-score').textContent = data.total_quiz_score;
+
+    // Display the questions
+    renderQuestions(data.questions, data.quiz_id);
+} 
