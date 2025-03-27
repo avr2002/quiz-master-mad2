@@ -17,6 +17,7 @@ from quiz_api.routes.chapters import chapters_bp
 from quiz_api.routes.home import home_bp
 from quiz_api.routes.questions import questions_bp
 from quiz_api.routes.quiz_attempts import quiz_attempts_bp
+from quiz_api.routes.quiz_registration import user_quiz_bp
 from quiz_api.routes.quizzes import quiz_bp
 from quiz_api.routes.subjects import subjects_bp
 from quiz_api.utils.auth import init_admin, init_jwt
@@ -71,6 +72,7 @@ def create_app(test_config: Optional[dict | object] = None) -> Flask:
     app.register_blueprint(quiz_bp)
     app.register_blueprint(questions_bp)
     app.register_blueprint(quiz_attempts_bp)
+    app.register_blueprint(user_quiz_bp)
 
     return app
 
