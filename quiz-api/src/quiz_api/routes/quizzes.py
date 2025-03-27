@@ -170,6 +170,9 @@ def delete_quiz(quiz_id: int):
 def get_all_upcoming_quizzes():
     """Get all upcoming quizzes. (User is logged in)"""
     try:
+        current_user_id = int(get_jwt_identity())
+        current_user: User = db.session.get(User, current_user_id)
+
         current_date = datetime.now()
         quizzes = Quiz.query.filter(Quiz.date_of_quiz >= current_date).all()
 
@@ -177,6 +180,7 @@ def get_all_upcoming_quizzes():
             return jsonify({"message": "No upcoming quizzes found"}), HTTPStatus.NOT_FOUND
 
         # Get chapter id and subject id from quiz
+        # Do not show quizzes with no questions to normal users
         quizzes_list = [
             {
                 "id": quiz.id,
@@ -190,6 +194,7 @@ def get_all_upcoming_quizzes():
                 "remarks": quiz.remarks,
             }
             for quiz in quizzes
+            if not(current_user.role == "user" and quiz.number_of_questions == 0)
         ]
         return jsonify(quizzes_list), HTTPStatus.OK
     finally:
@@ -201,12 +206,16 @@ def get_all_upcoming_quizzes():
 def get_all_past_quizzes():
     """Get all past quizzes."""
     try:
-        quizzes = Quiz.query.all()
+        current_user_id = int(get_jwt_identity())
+        current_user: User = db.session.get(User, current_user_id)
+
+        current_date = datetime.now()
+        quizzes = Quiz.query.filter(Quiz.date_of_quiz < current_date).all()
         if not quizzes:
             return jsonify({"message": "No quizzes found"}), HTTPStatus.NOT_FOUND
 
         # get seperate list of past and upcoming quizzes
-        current_date = datetime.now()
+        # Do not show quizzes with no questions to normal users
         past_quizzes = [
             {
                 "id": quiz.id,
@@ -220,7 +229,7 @@ def get_all_past_quizzes():
                 "remarks": quiz.remarks,
             }
             for quiz in quizzes
-            if quiz.date_of_quiz < current_date
+            if not(current_user.role == "user" and quiz.number_of_questions == 0)
         ]
 
         return jsonify(past_quizzes), HTTPStatus.OK
@@ -233,9 +242,11 @@ def get_all_past_quizzes():
 def get_all_ongoing_quizzes():
     """Get all ongoing quizzes. (User is logged in)"""
     try:
-        current_time = datetime.now()
+        current_user_id = int(get_jwt_identity())
+        current_user: User = db.session.get(User, current_user_id)
 
         # Fetch only quizzes that have started (optimizing DB filtering)
+        current_time = datetime.now()
         quizzes = Quiz.query.filter(Quiz.date_of_quiz <= current_time).all()
         if not quizzes:
             return jsonify({"message": "No ongoing quizzes found"}), HTTPStatus.NOT_FOUND
@@ -253,7 +264,7 @@ def get_all_ongoing_quizzes():
                 "remarks": quiz.remarks,
             }
             for quiz in quizzes
-            if current_time <= quiz.end_time
+            if quiz.is_active and not(current_user.role == "user" and quiz.number_of_questions == 0)
         ]
         return jsonify(quizzes_list), HTTPStatus.OK
     finally:

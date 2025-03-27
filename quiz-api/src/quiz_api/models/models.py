@@ -105,7 +105,8 @@ class Quiz(db.Model):
         """Calculate the end datetime of the quiz."""
         if self.time_duration and self.date_of_quiz:
             hours, minutes = map(int, self.time_duration.split(":"))
-            return self.date_of_quiz + timedelta(hours=hours, minutes=minutes)
+            end_time = self.date_of_quiz + timedelta(hours=hours, minutes=minutes)
+            return end_time.replace(tzinfo=timezone.utc)
         return None
 
     @hybrid_property
@@ -121,7 +122,7 @@ class Quiz(db.Model):
     @hybrid_property
     def is_upcoming(self) -> bool:
         """Check if the quiz is upcoming."""
-        return self.date_of_quiz > datetime.now(timezone.utc)
+        return self.date_of_quiz.replace(tzinfo=timezone.utc) > datetime.now(timezone.utc)
 
     @hybrid_property
     def is_active(self) -> bool:
