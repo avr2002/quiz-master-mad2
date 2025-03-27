@@ -6,6 +6,18 @@ if (!isAuthenticated()) {
     window.location.href = '/pages/auth/login.html';
 }
 
+// Simple function to convert date from DD/MM/YYYY to YYYY-MM-DD
+function formatDateForInput(dateStr) {
+    if (!dateStr) return '';
+
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+
+    return dateStr;
+}
+
 // Load user data
 async function loadProfile() {
     try {
@@ -13,7 +25,7 @@ async function loadProfile() {
         document.getElementById('username').value = user.username;
         document.getElementById('email').value = user.email;
         document.getElementById('full_name').value = user.full_name;
-        document.getElementById('dob').value = user.dob ? new Date(user.dob).toISOString().split('T')[0] : '';
+        document.getElementById('dob').value = formatDateForInput(user.dob);
     } catch (error) {
         showError(error.message);
     }
@@ -30,8 +42,22 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
     };
 
     try {
+        // Update the profile
         await updateProfile(data);
+
+        // Fetch the updated user data
+        const updatedUser = await getCurrentUser();
+
+        // Update localStorage with new values
+        localStorage.setItem('userName', updatedUser.username);
+        localStorage.setItem('userFullName', updatedUser.full_name);
+
         showSuccess('Profile updated successfully');
+
+        // Force a hard reload of the page after a short delay
+        setTimeout(() => {
+            window.location.reload(true);
+        }, 1000);
     } catch (error) {
         showError(error.message);
     }

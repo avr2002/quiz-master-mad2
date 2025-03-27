@@ -74,6 +74,7 @@ export function clearUserData() {
     localStorage.removeItem('token');
     localStorage.removeItem('userRole');
     localStorage.removeItem('userName');
+    localStorage.removeItem('userFullName');
 }
 
 // Make logout available globally
