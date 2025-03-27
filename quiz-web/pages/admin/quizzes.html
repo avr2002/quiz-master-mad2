@@ -186,6 +186,12 @@
                         <div class="card quiz-card">
                             <div class="card-body">
                                 <h5 class="card-title">${quiz.name}</h5>
+                                <div class="quiz-subject mb-2">
+                                    <i class="bi bi-book"></i> ${quiz.subject_name}
+                                </div>
+                                <div class="quiz-chapter mb-2">
+                                    <i class="bi bi-bookmark"></i> ${quiz.chapter_name}
+                                </div>
                                 <div class="quiz-date mb-2">
                                     <i class="bi bi-calendar-event"></i> ${formatQuizDate(quiz.date_of_quiz)}
                                 </div>

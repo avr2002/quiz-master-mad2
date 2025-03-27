@@ -170,11 +170,6 @@ def delete_quiz(quiz_id: int):
 def get_all_upcoming_quizzes():
     """Get all upcoming quizzes. (User is logged in)"""
     try:
-        current_user_id = int(get_jwt_identity())
-        current_user: User | None = db.session.get(User, current_user_id)
-        if not current_user or current_user.role not in ["user", "admin"]:
-            return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
-
         current_date = datetime.now()
         quizzes = Quiz.query.filter(Quiz.date_of_quiz >= current_date).all()
 
@@ -186,7 +181,9 @@ def get_all_upcoming_quizzes():
             {
                 "id": quiz.id,
                 "chapter_id": quiz.chapter_id,
+                "chapter_name": quiz.chapter.name,
                 "subject_id": quiz.chapter.subject_id,
+                "subject_name": quiz.chapter.subject.name,
                 "name": quiz.name,
                 "date_of_quiz": quiz.date_of_quiz.isoformat(),
                 "time_duration": quiz.time_duration,
@@ -202,13 +199,8 @@ def get_all_upcoming_quizzes():
 @quiz_bp.route("/quizzes/past", methods=[HTTPMethod.GET])
 @jwt_required()
 def get_all_past_quizzes():
-    """Get all past quizzes. (Admin only)"""
+    """Get all past quizzes."""
     try:
-        current_user_id = int(get_jwt_identity())
-        current_user: User | None = db.session.get(User, current_user_id)
-        if not current_user or current_user.role != "admin":
-            return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
-
         quizzes = Quiz.query.all()
         if not quizzes:
             return jsonify({"message": "No quizzes found"}), HTTPStatus.NOT_FOUND
@@ -219,7 +211,9 @@ def get_all_past_quizzes():
             {
                 "id": quiz.id,
                 "chapter_id": quiz.chapter_id,
+                "chapter_name": quiz.chapter.name,
                 "subject_id": quiz.chapter.subject_id,
+                "subject_name": quiz.chapter.subject.name,
                 "name": quiz.name,
                 "date_of_quiz": quiz.date_of_quiz.isoformat(),
                 "time_duration": quiz.time_duration,
@@ -239,11 +233,6 @@ def get_all_past_quizzes():
 def get_all_ongoing_quizzes():
     """Get all ongoing quizzes. (User is logged in)"""
     try:
-        current_user_id = int(get_jwt_identity())
-        current_user: User | None = db.session.get(User, current_user_id)
-        if not current_user or current_user.role not in ["user", "admin"]:
-            return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
-
         current_time = datetime.now()
 
         # Fetch only quizzes that have started (optimizing DB filtering)
@@ -255,7 +244,9 @@ def get_all_ongoing_quizzes():
             {
                 "id": quiz.id,
                 "chapter_id": quiz.chapter_id,
+                "chapter_name": quiz.chapter.name,
                 "subject_id": quiz.chapter.subject_id,
+                "subject_name": quiz.chapter.subject.name,
                 "name": quiz.name,
                 "date_of_quiz": quiz.date_of_quiz.isoformat(),
                 "time_duration": quiz.time_duration,
