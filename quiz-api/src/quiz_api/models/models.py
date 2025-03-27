@@ -126,7 +126,19 @@ class Quiz(db.Model):
     @hybrid_property
     def is_active(self) -> bool:
         """Check if the quiz is active."""
-        return self.date_of_quiz <= datetime.now(timezone.utc) <= self.end_time
+        # Timezone check if necessary otherwise we get an error
+
+        # Ensure date_of_quiz has timezone info
+        quiz_start = self.date_of_quiz
+        if not quiz_start.tzinfo:
+            quiz_start = quiz_start.replace(tzinfo=timezone.utc)
+
+        # Check if end_time exists and has timezone info
+        end_time = self.end_time
+        if end_time and not end_time.tzinfo:
+            end_time = end_time.replace(tzinfo=timezone.utc)
+
+        return quiz_start <= datetime.now(timezone.utc) <= end_time
 
 
 class Question(db.Model):

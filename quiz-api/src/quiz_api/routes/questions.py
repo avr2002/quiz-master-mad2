@@ -57,16 +57,20 @@ def create_question(quiz_id: int):
 @jwt_required()
 def get_quiz_questions(quiz_id: int):
     """Get all questions under a quiz."""
+    # Get current user
+    current_user_id = int(get_jwt_identity())
+    current_user: User = db.session.get(User, current_user_id)
+
     # Verify quiz exists
     quiz: Quiz | None = db.session.get(Quiz, quiz_id)
     if not quiz:
         return jsonify({"message": "Quiz not found"}), HTTPStatus.NOT_FOUND
 
-    questions = Question.query.filter_by(quiz_id=quiz_id).all()
-    # question_dict = MultipleQuestionsSchema(
-    #     questions=[QuestionSchema.model_validate(question) for question in questions]
-    # ).model_dump()
+    # Only past quiz questions are allowed to be seen by a normal user via this endpoint
+    if current_user.role == "user" and quiz.is_active:
+        return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
 
+    questions = Question.query.filter_by(quiz_id=quiz_id).all()
     question_dict = [
         {
             "id": question.id,
@@ -84,6 +88,8 @@ def get_quiz_questions(quiz_id: int):
         "questions": question_dict,
         "quiz_id": quiz_id,
         "quiz_name": quiz.name,
+        "total_quiz_score": quiz.total_quiz_score,
+        "number_of_questions": quiz.number_of_questions,
         "chapter_id": quiz.chapter_id,
         "chapter_name": quiz.chapter.name,
         "subject_id": quiz.chapter.subject_id,
