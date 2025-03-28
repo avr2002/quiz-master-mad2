@@ -196,7 +196,7 @@ class QuizAnswerSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     question_id: int = Field(..., gt=0)
-    selected_option: int = Field(..., ge=1, le=4)
+    selected_option: int | None = Field(None, ge=1, le=4)
 
 
 class QuizAttemptSchema(BaseModel):

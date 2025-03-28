@@ -50,9 +50,11 @@ def start_quiz_attempt(quiz_id: int):
     ]
     response = {
         "name": quiz.name,
+        "date_of_quiz": quiz.date_of_quiz.isoformat(),
+        "end_time": quiz.end_time.isoformat(),
+        "time_duration": quiz.time_duration,
         "total_questions": quiz.number_of_questions,
         "total_quiz_score": quiz.total_quiz_score,
-        "time_duration": quiz.time_duration,
         "questions": questions_list,
     }
     return jsonify(response), HTTPStatus.OK
@@ -78,22 +80,22 @@ def submit_quiz(quiz_id: int):
 
     # Calculate score
     user_score = 0  # Total points scored by the user
-    correct_answers = 0  # Number of correct answers
+    num_correct_answers = 0  # Number of correct answers
     questions = Question.query.filter_by(quiz_id=quiz_id).all()
     question_map = {q.id: q for q in questions}
 
     for answer in data.answers:
-        question = question_map.get(answer.question_id)
-        if question and question.correct_option == answer.selected_option:
+        question = question_map[answer.question_id]
+        if answer.selected_option and question.correct_option == answer.selected_option:
             user_score += question.points
-            correct_answers += 1
+            num_correct_answers += 1
 
     # Record score
     score = Score(
         quiz_id=quiz_id,
         user_id=current_user_id,
         user_score=user_score,
-        number_of_correct_answers=correct_answers,
+        number_of_correct_answers=num_correct_answers,
     )
     db.session.add(score)
     db.session.commit()
@@ -102,7 +104,7 @@ def submit_quiz(quiz_id: int):
         jsonify(
             {
                 "message": "Quiz submitted successfully",
-                "correct_answers": correct_answers,
+                "correct_answers": num_correct_answers,
                 "score": ScoreSchema.model_validate(score).model_dump(),
             }
         ),
