@@ -194,7 +194,7 @@ def get_all_upcoming_quizzes():
                 "remarks": quiz.remarks,
             }
             for quiz in quizzes
-            if not(current_user.role == "user" and quiz.number_of_questions == 0)
+            if not quiz.is_active and not (current_user.role == "user" and quiz.number_of_questions == 0)
         ]
         return jsonify(quizzes_list), HTTPStatus.OK
     finally:
@@ -229,7 +229,7 @@ def get_all_past_quizzes():
                 "remarks": quiz.remarks,
             }
             for quiz in quizzes
-            if not(current_user.role == "user" and quiz.number_of_questions == 0)
+            if not quiz.is_active and not (current_user.role == "user" and quiz.number_of_questions == 0)
         ]
 
         return jsonify(past_quizzes), HTTPStatus.OK
@@ -264,7 +264,7 @@ def get_all_ongoing_quizzes():
                 "remarks": quiz.remarks,
             }
             for quiz in quizzes
-            if quiz.is_active and not(current_user.role == "user" and quiz.number_of_questions == 0)
+            if quiz.is_active and not (current_user.role == "user" and quiz.number_of_questions == 0)
         ]
         return jsonify(quizzes_list), HTTPStatus.OK
     finally:
