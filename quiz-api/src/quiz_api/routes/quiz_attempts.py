@@ -18,14 +18,21 @@ quiz_attempts_bp: Blueprint = Blueprint("quiz_attempts", __name__, url_prefix="/
 @jwt_required()
 def start_quiz_attempt(quiz_id: int):
     """Start a quiz attempt."""
+    current_user_id = int(get_jwt_identity())
+    
     # Verify quiz exists
     quiz: Quiz | None = db.session.get(Quiz, quiz_id)
     if not quiz:
         return jsonify({"message": "Quiz not found"}), HTTPStatus.NOT_FOUND
+
+    # If user hasn't signed up for the quiz, return error
+    quiz_signup: QuizSignup | None = QuizSignup.query.filter_by(user_id=current_user_id, quiz_id=quiz_id).first()
+    if not quiz_signup:
+        return jsonify({"message": "User has not signed up for this quiz"}), HTTPStatus.FORBIDDEN
+
+    # If quiz is not active, return error
     if not quiz.is_active:
         return jsonify({"message": "Quiz is not active"}), HTTPStatus.FORBIDDEN
-    if quiz.number_of_questions == 0:
-        return jsonify({"message": "No questions found for this quiz"}), HTTPStatus.NOT_FOUND
 
     # Get questions for the quiz
     # questions = Question.query.filter_by(quiz_id=quiz_id).all()
