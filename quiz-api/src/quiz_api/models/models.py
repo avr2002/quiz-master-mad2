@@ -101,13 +101,14 @@ class Quiz(db.Model):
         return [signup.user for signup in self.user_signups]
 
     @hybrid_property
-    def end_time(self) -> datetime | None:
+    def end_time(self) -> datetime:
         """Calculate the end datetime of the quiz."""
-        if self.time_duration and self.date_of_quiz:
-            hours, minutes = map(int, self.time_duration.split(":"))
-            end_time = self.date_of_quiz + timedelta(hours=hours, minutes=minutes)
-            return end_time.replace(tzinfo=timezone.utc)
-        return None
+        # Since date_of_quiz and time_duration is always needed, we don't need to check if it's None
+        # if self.time_duration and self.date_of_quiz:
+        hours, minutes = map(int, self.time_duration.split(":"))
+        end_time = self.date_of_quiz + timedelta(hours=hours, minutes=minutes)
+        return end_time.replace(tzinfo=timezone.utc)
+        # return None
 
     @hybrid_property
     def total_quiz_score(self) -> int:
@@ -122,7 +123,13 @@ class Quiz(db.Model):
     @hybrid_property
     def is_upcoming(self) -> bool:
         """Check if the quiz is upcoming."""
-        return self.date_of_quiz.replace(tzinfo=timezone.utc) > datetime.now(timezone.utc)
+        # Ensure date_of_quiz has timezone info
+        quiz_start = self.date_of_quiz
+        if not quiz_start.tzinfo:
+            quiz_start = quiz_start.replace(tzinfo=timezone.utc)
+
+        # Get current time in UTC
+        return quiz_start > datetime.now(timezone.utc)
 
     @hybrid_property
     def is_active(self) -> bool:
@@ -134,12 +141,8 @@ class Quiz(db.Model):
         if not quiz_start.tzinfo:
             quiz_start = quiz_start.replace(tzinfo=timezone.utc)
 
-        # Check if end_time exists and has timezone info
-        end_time = self.end_time
-        if end_time and not end_time.tzinfo:
-            end_time = end_time.replace(tzinfo=timezone.utc)
-
-        return quiz_start <= datetime.now(timezone.utc) <= end_time
+        # Get end time with timezone info
+        return quiz_start <= datetime.now(timezone.utc) <= self.end_time
 
 
 class Question(db.Model):
