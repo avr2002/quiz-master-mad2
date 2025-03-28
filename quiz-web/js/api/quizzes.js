@@ -148,18 +148,87 @@ export async function searchQuizzes(chapterId, query, limit = 10, offset = 0) {
 /**
  * Format a date string for display
  * @param {string} dateString - ISO date string
- * @returns {string} - Formatted date string (e.g., "Jan 15, 2023")
+ * @returns {string} - Formatted date string (e.g., "Jan 15, 2023 2:30 PM")
  */
 export function formatQuizDate(dateString) {
     if (!dateString) return '';
-    const date = new Date(dateString);
+
+    // Ensure we have the Z suffix for UTC time
+    let parsedDateString = dateString;
+    if (!dateString.endsWith('Z') && !dateString.includes('+')) {
+        parsedDateString = dateString + 'Z';
+    }
+
+    // Create a date object - this will be in UTC
+    const date = new Date(parsedDateString);
+
+    // Format the date in the local timezone
     return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        timeZoneName: 'short'
     });
+}
+
+/**
+ * Convert a UTC ISO date string to local datetime format for form inputs
+ * @param {string} utcDateString - ISO date string from the server
+ * @returns {string} - Formatted local datetime string for datetime-local input
+ */
+export function utcToLocalDateTime(utcDateString) {
+    if (!utcDateString) return '';
+
+    // Ensure we have the Z suffix for UTC time
+    let parsedDateString = utcDateString;
+    if (!utcDateString.endsWith('Z') && !utcDateString.includes('+')) {
+        parsedDateString = utcDateString + 'Z';
+    }
+
+    // Parse the UTC date string
+    const date = new Date(parsedDateString);
+
+    // Format for datetime-local input in local timezone (YYYY-MM-DDTHH:MM)
+    // padStart ensures 2 digits with leading zeros
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    const localTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+    return localTimeString;
+}
+
+/**
+ * Convert a local datetime string to UTC ISO format for API submission
+ * @param {string} localDateTimeString - Local datetime string from datetime-local input
+ * @returns {string} - ISO date string in UTC timezone
+ */
+export function localDateTimeToUTC(localDateTimeString) {
+    if (!localDateTimeString) return '';
+
+    // Parse the local datetime string into its parts
+    const [datePart, timePart] = localDateTimeString.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes] = timePart.split(':').map(Number);
+
+    // Create a date using the local components and get its UTC equivalent
+    const localDate = new Date(year, month - 1, day, hours, minutes);
+
+    // Get the UTC components
+    const utcYear = localDate.getUTCFullYear();
+    const utcMonth = String(localDate.getUTCMonth() + 1).padStart(2, '0');
+    const utcDay = String(localDate.getUTCDate()).padStart(2, '0');
+    const utcHours = String(localDate.getUTCHours()).padStart(2, '0');
+    const utcMinutes = String(localDate.getUTCMinutes()).padStart(2, '0');
+    const utcSeconds = String(localDate.getUTCSeconds()).padStart(2, '0');
+
+    // Format as ISO string (YYYY-MM-DDTHH:MM:SS.sssZ)
+    const utcString = `${utcYear}-${utcMonth}-${utcDay}T${utcHours}:${utcMinutes}:${utcSeconds}.000Z`;
+    return utcString;
 }
 
 /**

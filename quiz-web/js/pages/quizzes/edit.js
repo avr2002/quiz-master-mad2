@@ -1,4 +1,4 @@
-import { getQuiz, createQuiz, updateQuiz } from '/js/api/quizzes.js';
+import { getQuiz, createQuiz, updateQuiz, utcToLocalDateTime, localDateTimeToUTC } from '/js/api/quizzes.js';
 import { getChapter } from '/js/api/chapters.js';
 
 // Initialize the quiz edit page
@@ -49,9 +49,10 @@ export function initQuizEdit() {
         quizForm.addEventListener('submit', (event) => {
             event.preventDefault();
             const formData = new FormData(quizForm);
+
             const quizData = {
                 name: formData.get('name'),
-                date_of_quiz: formData.get('date_of_quiz'),
+                date_of_quiz: localDateTimeToUTC(formData.get('date_of_quiz')),
                 time_duration: formData.get('time_duration'),
                 remarks: formData.get('remarks') || null
             };
@@ -69,14 +70,21 @@ export function initQuizEdit() {
     if (isEditing) {
         loadQuizData(quizId);
     } else {
-        // Set default date to tomorrow at 9:00 AM
+        // Set default date to tomorrow at 9:00 AM in local time
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         tomorrow.setHours(9, 0, 0, 0);
 
         const dateInput = document.getElementById('date-of-quiz');
         if (dateInput) {
-            dateInput.value = tomorrow.toISOString().slice(0, 16);
+            // Format the date for the input field (YYYY-MM-DDTHH:MM)
+            const year = tomorrow.getFullYear();
+            const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+            const day = String(tomorrow.getDate()).padStart(2, '0');
+            const hours = String(tomorrow.getHours()).padStart(2, '0');
+            const minutes = String(tomorrow.getMinutes()).padStart(2, '0');
+
+            dateInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
         }
 
         // Set default duration to 1 hour
@@ -136,9 +144,7 @@ async function loadQuizData(quizId) {
         }
 
         if (dateInput && quiz.date_of_quiz) {
-            // Format date for datetime-local input (YYYY-MM-DDTHH:MM)
-            const date = new Date(quiz.date_of_quiz);
-            dateInput.value = date.toISOString().slice(0, 16);
+            dateInput.value = utcToLocalDateTime(quiz.date_of_quiz);
         }
 
         if (durationInput && quiz.time_duration) {
