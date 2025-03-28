@@ -207,7 +207,7 @@ class QuestionAttempt(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     score_id: Mapped[int] = mapped_column(ForeignKey("scores.id"), nullable=False, index=True)
     question_id: Mapped[int] = mapped_column(ForeignKey("questions.id"), nullable=False)
-    selected_option: Mapped[int] = mapped_column(nullable=False)  # 1-4 representing user's choice
+    selected_option: Mapped[int | None] = mapped_column(nullable=True)  # 1-4 representing user's choice
     is_correct: Mapped[bool] = mapped_column(nullable=False)  # Whether the selected answer was correct
 
     # Relationships

@@ -285,18 +285,27 @@ def get_quizzes_by_user():
         if not current_user:
             return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
 
-        quizzes = Score.query.filter_by(user_id=current_user_id).all()
-        if not quizzes:
+        # Get all scores for the user
+        scores = Score.query.filter_by(user_id=current_user_id).all()
+        if not scores:
             return jsonify({"message": "No quizzes attempted by the user"}), HTTPStatus.NOT_FOUND
 
+        # Create a dictionary to track the latest score for each quiz
+        latest_scores = {}
+        for score in scores:
+            if score.quiz_id not in latest_scores or score.timestamp > latest_scores[score.quiz_id].timestamp:
+                latest_scores[score.quiz_id] = score
+
+        # Convert the latest scores to a list of dictionaries
         quizzes_list = [
             {
-                "id": quiz.id,
-                "quiz_id": quiz.quiz_id,
-                "user_id": quiz.user_id,
-                "score": quiz.score,
+                "id": score.id,
+                "quiz_id": score.quiz_id,
+                "user_id": score.user_id,
+                "score": score.score,
+                "timestamp": score.timestamp.isoformat(),
             }
-            for quiz in quizzes
+            for score in latest_scores.values()
         ]
 
         return jsonify(quizzes_list), HTTPStatus.OK

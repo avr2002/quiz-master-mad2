@@ -98,7 +98,13 @@ def get_user_quizzes():
         quiz = signup.quiz
         status = "upcoming" if quiz.is_upcoming else "active" if quiz.is_active else "completed"
 
-        user_score = Score.query.filter_by(user_id=current_user_id, quiz_id=quiz.id).first()
+        # Get the latest score for the quiz, sort by timestamp in descending order
+        # TODO: Later only allow user to take the quiz once to avoid multiple attempts
+        user_score = (
+            Score.query.filter_by(user_id=current_user_id, quiz_id=quiz.id)
+            .order_by(Score.timestamp.desc())
+            .first()
+        )
         user_score_value = user_score.user_score if user_score else "?"
         user_number_of_correct_answers = user_score.number_of_correct_answers if user_score else "?"
 

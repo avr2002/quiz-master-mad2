@@ -32,6 +32,8 @@ def start_quiz_attempt(quiz_id: int):
     # If quiz is not active, return error
     if not quiz.is_active:
         return jsonify({"message": "Quiz is not active"}), HTTPStatus.FORBIDDEN
+    
+    # TODO: Later only allow user to take the quiz once to avoid multiple attempts
 
     # Get questions for the quiz
     # questions = Question.query.filter_by(quiz_id=quiz_id).all()
@@ -78,17 +80,31 @@ def submit_quiz(quiz_id: int):
     # Validate submission data
     data = QuizAttemptSchema(**request.get_json())
 
-    # Calculate score
+    # Prepare to calculate score and create question attempts
     user_score = 0  # Total points scored by the user
     num_correct_answers = 0  # Number of correct answers
     questions = Question.query.filter_by(quiz_id=quiz_id).all()
     question_map = {q.id: q for q in questions}
+    question_attempts = []  # List to store question attempt records
 
     for answer in data.answers:
         question = question_map[answer.question_id]
+        is_correct = False
+
+        # Check if answer is correct and update score
         if answer.selected_option and question.correct_option == answer.selected_option:
+            is_correct = True
             user_score += question.points
             num_correct_answers += 1
+
+        # Prepare question attempt record
+        question_attempts.append(
+            QuestionAttempt(
+                question_id=question.id,
+                selected_option=answer.selected_option if answer.selected_option else None,
+                is_correct=is_correct,
+            )
+        )
 
     # Record score
     score = Score(
@@ -98,18 +114,15 @@ def submit_quiz(quiz_id: int):
         number_of_correct_answers=num_correct_answers,
     )
     db.session.add(score)
-    db.session.commit()
+    db.session.flush()  # This ensures score gets an ID without committing the transaction
 
-    return (
-        jsonify(
-            {
-                "message": "Quiz submitted successfully",
-                "correct_answers": num_correct_answers,
-                "score": ScoreSchema.model_validate(score).model_dump(),
-            }
-        ),
-        HTTPStatus.OK,
-    )
+    # Set score_id for all question attempts and add to session
+    for question_attempt in question_attempts:
+        question_attempt.score_id = score.id
+        db.session.add(question_attempt)
+
+    db.session.commit()
+    return jsonify({"message": "Quiz submitted successfully"}), HTTPStatus.OK
 
 
 @quiz_attempts_bp.route("/<int:quiz_id>/results", methods=[HTTPMethod.GET])
@@ -128,7 +141,11 @@ def get_user_quiz_attempt_results(quiz_id: int):
         return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
 
     # Get score, correct answers and questions
-    score: Score | None = Score.query.filter_by(quiz_id=quiz_id, user_id=current_user_id).first()
+    score: Score | None = (
+        Score.query.filter_by(quiz_id=quiz_id, user_id=current_user_id)
+        .order_by(Score.timestamp.desc())
+        .first()
+    )
     if not score:
         return jsonify({"message": "Quiz not attempted or User did not sign up for the quiz"}), HTTPStatus.NOT_FOUND
 
@@ -164,7 +181,13 @@ def get_user_quiz_score_details(quiz_id: int):
     current_user_id = int(get_jwt_identity())
 
     # Verify user has attempted the quiz
-    score: Score | None = Score.query.filter_by(quiz_id=quiz_id, user_id=current_user_id).first()
+    # Get the latest score for the quiz, sort by timestamp in descending order
+    # TODO: Later only allow user to take the quiz once to avoid multiple attempts
+    score: Score | None = (
+        Score.query.filter_by(quiz_id=quiz_id, user_id=current_user_id)
+        .order_by(Score.timestamp.desc())
+        .first()
+    )
     if not score:
         return jsonify({"message": "Quiz not attempted or User did not sign up for the quiz"}), HTTPStatus.NOT_FOUND
 
