@@ -29,13 +29,17 @@ def quiz_signup(quiz_id: int):
         return jsonify({"message": "Quiz not found"}), HTTPStatus.NOT_FOUND
 
     # Check if quiz is upcoming
-    if not quiz.is_upcoming:
+    if not quiz.is_upcoming or not quiz.is_active:
         return jsonify({"message": "Date of registration is over"}), HTTPStatus.BAD_REQUEST
 
     # Check if user is already signed up for the quiz
     existing_signup = QuizSignup.query.filter_by(user_id=current_user_id, quiz_id=quiz_id).first()
     if existing_signup:
         return jsonify({"message": "User already signed up for this quiz"}), HTTPStatus.BAD_REQUEST
+
+    # If quiz has no questions, cannot sign up
+    if quiz.number_of_questions == 0:
+        return jsonify({"message": "No questions found for this quiz"}), HTTPStatus.NOT_FOUND
 
     # Create new signup
     new_signup = QuizSignup(user_id=current_user_id, quiz_id=quiz_id)
@@ -57,13 +61,21 @@ def cancel_quiz_registration(quiz_id: int):
 
     # Verify quiz exists and is upcoming
     quiz: Quiz | None = db.session.get(Quiz, quiz_id)
-    if not quiz or not quiz.is_upcoming:
-        return jsonify({"message": "Quiz not found or date of registration is over"}), HTTPStatus.NOT_FOUND
+    if not quiz:
+        return jsonify({"message": "Quiz not found"}), HTTPStatus.NOT_FOUND
 
     # Check if user is signed up for the quiz
     existing_signup = QuizSignup.query.filter_by(user_id=current_user_id, quiz_id=quiz_id).first()
     if not existing_signup:
         return jsonify({"message": "User is not signed up for this quiz"}), HTTPStatus.BAD_REQUEST
+
+    # If quiz is over, cannot cancel
+    if not quiz.is_upcoming:
+        return jsonify({"message": "Past quizzes cannot be cancelled"}), HTTPStatus.BAD_REQUEST
+
+    # Cannot cancel a quiz that is ongoing
+    if quiz.is_active:
+        return jsonify({"message": "Cannot cancel a quiz that is ongoing"}), HTTPStatus.BAD_REQUEST
 
     # Delete the signup
     db.session.delete(existing_signup)
