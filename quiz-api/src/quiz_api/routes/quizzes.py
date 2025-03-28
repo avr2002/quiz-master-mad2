@@ -97,6 +97,7 @@ def get_quiz(quiz_id: int):
             "chapter_id": quiz.chapter_id,
             "name": quiz.name,
             "date_of_quiz": quiz.date_of_quiz.isoformat(),
+            "end_time": quiz.end_time.isoformat(),
             "time_duration": quiz.time_duration,
             "remarks": quiz.remarks,
         }
