@@ -158,7 +158,6 @@ def update_chapter(chapter_id: int):
 
         db.session.commit()
         return jsonify({"message": "Chapter updated successfully"}), HTTPStatus.OK
-
     except ValueError as e:
         return jsonify({"message": str(e)}), HTTPStatus.BAD_REQUEST
     except Exception as e:

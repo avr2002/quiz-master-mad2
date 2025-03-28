@@ -125,7 +125,7 @@ function setupFormSubmission(subjectId, chapterId) {
         try {
             if (chapterId) {
                 // Update existing chapter
-                await updateChapter(subjectId, chapterId, chapterData);
+                await updateChapter(chapterId, chapterData);
                 showSuccess('Chapter updated successfully');
             } else {
                 // Create new chapter
