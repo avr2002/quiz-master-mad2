@@ -29,7 +29,7 @@ def quiz_signup(quiz_id: int):
         return jsonify({"message": "Quiz not found"}), HTTPStatus.NOT_FOUND
 
     # Check if quiz is upcoming
-    if not quiz.is_upcoming or not quiz.is_active:
+    if not quiz.is_upcoming or quiz.is_active:
         return jsonify({"message": "Date of registration is over"}), HTTPStatus.BAD_REQUEST
 
     # Check if user is already signed up for the quiz

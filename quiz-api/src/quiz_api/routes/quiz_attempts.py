@@ -1,6 +1,5 @@
 """User Management Routes."""
 
-from datetime import datetime, timezone
 from http import HTTPMethod, HTTPStatus
 from typing import List
 
@@ -19,7 +18,7 @@ quiz_attempts_bp: Blueprint = Blueprint("quiz_attempts", __name__, url_prefix="/
 def start_quiz_attempt(quiz_id: int):
     """Start a quiz attempt."""
     current_user_id = int(get_jwt_identity())
-    
+
     # Verify quiz exists
     quiz: Quiz | None = db.session.get(Quiz, quiz_id)
     if not quiz:

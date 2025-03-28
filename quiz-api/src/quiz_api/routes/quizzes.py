@@ -1,6 +1,6 @@
 """Quiz routes for the Quiz API."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from http import HTTPMethod, HTTPStatus
 
 from flask import Blueprint, jsonify, request
@@ -173,7 +173,7 @@ def get_all_upcoming_quizzes():
         current_user_id = int(get_jwt_identity())
         current_user: User = db.session.get(User, current_user_id)
 
-        current_date = datetime.now()
+        current_date = datetime.now(timezone.utc)
         quizzes = Quiz.query.filter(Quiz.date_of_quiz >= current_date).all()
 
         if not quizzes:
@@ -194,7 +194,9 @@ def get_all_upcoming_quizzes():
                 "remarks": quiz.remarks,
             }
             for quiz in quizzes
-            if not quiz.is_active and not (current_user.role == "user" and quiz.number_of_questions == 0)
+            if quiz.is_upcoming
+            and not quiz.is_active
+            and not (current_user.role == "user" and quiz.number_of_questions == 0)
         ]
         return jsonify(quizzes_list), HTTPStatus.OK
     finally:
@@ -209,8 +211,9 @@ def get_all_past_quizzes():
         current_user_id = int(get_jwt_identity())
         current_user: User = db.session.get(User, current_user_id)
 
-        current_date = datetime.now()
+        current_date = datetime.now(timezone.utc)
         quizzes = Quiz.query.filter(Quiz.date_of_quiz < current_date).all()
+
         if not quizzes:
             return jsonify({"message": "No quizzes found"}), HTTPStatus.NOT_FOUND
 
@@ -246,7 +249,7 @@ def get_all_ongoing_quizzes():
         current_user: User = db.session.get(User, current_user_id)
 
         # Fetch only quizzes that have started (optimizing DB filtering)
-        current_time = datetime.now()
+        current_time = datetime.now(timezone.utc)
         quizzes = Quiz.query.filter(Quiz.date_of_quiz <= current_time).all()
         if not quizzes:
             return jsonify({"message": "No ongoing quizzes found"}), HTTPStatus.NOT_FOUND
