@@ -62,7 +62,15 @@ class DevelopmentConfig(Config):
 
     DEBUG = True
     SQLITE_DB_DIR = str(ROOT_DIR / "database" / "quiz_master.db")
-    SQLALCHEMY_DATABASE_URI = f"sqlite:///{SQLITE_DB_DIR}"
+    # SQLALCHEMY_DATABASE_URI = f"sqlite:///{SQLITE_DB_DIR}"
+    SQLALCHEMY_DATABASE_URI = (
+        f"sqlite:///{SQLITE_DB_DIR}"
+        f"?journal_mode=WAL"          # Write-Ahead Logging for better concurrency
+        f"&synchronous=NORMAL"        # Balance between safety and performance
+        f"&foreign_keys=ON"           # Enforce referential integrity
+        f"&locking_mode=NORMAL"       # Standard locking
+        f"&busy_timeout=5000"         # Wait 5 seconds on busy before failing
+    )
     SQLALCHEMY_ECHO = False  # Set True to Log SQL queries
 
 
