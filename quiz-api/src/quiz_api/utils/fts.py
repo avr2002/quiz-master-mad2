@@ -22,9 +22,9 @@ def setup_fts():
 
     try:
         # Set up FTS for each entity type
+        setup_users_fts()
         setup_subjects_fts()
         setup_chapters_fts()
-        setup_users_fts()
         setup_quizzes_fts()
 
         current_app.logger.info("FTS setup completed successfully")
@@ -98,6 +98,7 @@ def setup_subjects_fts():
 def setup_chapters_fts():
     """Set up FTS for chapters table."""
     try:
+        # Create FTS virtual table for chapters table
         db.session.execute(
             text("""
             CREATE VIRTUAL TABLE IF NOT EXISTS chapters_fts USING fts5(
@@ -110,6 +111,7 @@ def setup_chapters_fts():
         """)
         )
 
+        # Create INSERT trigger
         db.session.execute(
             text("""
             CREATE TRIGGER IF NOT EXISTS chapters_ai AFTER INSERT ON chapters
@@ -120,6 +122,7 @@ def setup_chapters_fts():
         """)
         )
 
+        # Create DELETE trigger
         db.session.execute(
             text("""
             CREATE TRIGGER IF NOT EXISTS chapters_ad AFTER DELETE ON chapters
@@ -129,6 +132,7 @@ def setup_chapters_fts():
         """)
         )
 
+        # Create UPDATE trigger
         db.session.execute(
             text("""
             CREATE TRIGGER IF NOT EXISTS chapters_au AFTER UPDATE ON chapters
@@ -154,6 +158,7 @@ def setup_chapters_fts():
 def setup_users_fts():
     """Set up FTS for users table."""
     try:
+        # Create FTS virtual table for users table
         db.session.execute(
             text("""
             CREATE VIRTUAL TABLE IF NOT EXISTS users_fts USING fts5(
@@ -167,6 +172,7 @@ def setup_users_fts():
         """)
         )
 
+        # Create INSERT trigger
         db.session.execute(
             text("""
             CREATE TRIGGER IF NOT EXISTS users_ai AFTER INSERT ON users
@@ -177,6 +183,7 @@ def setup_users_fts():
         """)
         )
 
+        # Create DELETE trigger
         db.session.execute(
             text("""
             CREATE TRIGGER IF NOT EXISTS users_ad AFTER DELETE ON users
@@ -186,6 +193,7 @@ def setup_users_fts():
         """)
         )
 
+        # Create UPDATE trigger
         db.session.execute(
             text("""
             CREATE TRIGGER IF NOT EXISTS users_au AFTER UPDATE ON users
@@ -211,6 +219,7 @@ def setup_users_fts():
 def setup_quizzes_fts():
     """Set up FTS for quizzes table."""
     try:
+        # Create FTS virtual table for quizzes table
         db.session.execute(
             text("""
             CREATE VIRTUAL TABLE IF NOT EXISTS quizzes_fts USING fts5(
@@ -223,6 +232,7 @@ def setup_quizzes_fts():
         """)
         )
 
+        # Create INSERT trigger
         db.session.execute(
             text("""
             CREATE TRIGGER IF NOT EXISTS quizzes_ai AFTER INSERT ON quizzes
@@ -233,6 +243,7 @@ def setup_quizzes_fts():
         """)
         )
 
+        # Create DELETE trigger
         db.session.execute(
             text("""
             CREATE TRIGGER IF NOT EXISTS quizzes_ad AFTER DELETE ON quizzes
@@ -242,6 +253,7 @@ def setup_quizzes_fts():
         """)
         )
 
+        # Create UPDATE trigger
         db.session.execute(
             text("""
             CREATE TRIGGER IF NOT EXISTS quizzes_au AFTER UPDATE ON quizzes
