@@ -85,7 +85,7 @@ export async function renderQuizzes(container, quizzes, type) {
              </button>` : '';
 
         const viewQuestionsButton = type === 'past' ?
-            `<a href="/pages/users/questions/list-past-quiz-questions.html?quiz_id=${quiz.id}" class="btn btn-info btn-sm text-white">
+            `<a href="/pages/users/list-past-quiz-questions.html?quiz_id=${quiz.id}" class="btn btn-info btn-sm text-white">
                 <i class="bi bi-question-circle"></i> View Questions
              </a>` : '';
 
