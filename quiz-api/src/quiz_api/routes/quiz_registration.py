@@ -111,7 +111,7 @@ def get_user_quizzes():
         quiz_data = {
             "id": quiz.id,
             "name": quiz.name,
-            "date_of_quiz": quiz.date_of_quiz,
+            "date_of_quiz": quiz.date_of_quiz.isoformat(),
             "time_duration": quiz.time_duration,
             "chapter_name": quiz.chapter.name,
             "subject_name": quiz.chapter.subject.name,

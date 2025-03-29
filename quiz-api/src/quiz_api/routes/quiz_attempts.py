@@ -32,7 +32,7 @@ def start_quiz_attempt(quiz_id: int):
     # If quiz is not active, return error
     if not quiz.is_active:
         return jsonify({"message": "Quiz is not active"}), HTTPStatus.FORBIDDEN
-    
+
     # TODO: Later only allow user to take the quiz once to avoid multiple attempts
 
     # Get questions for the quiz
@@ -101,7 +101,9 @@ def submit_quiz(quiz_id: int):
         question_attempts.append(
             QuestionAttempt(
                 question_id=question.id,
-                selected_option=answer.selected_option if answer.selected_option else None,
+                # selected_option=answer.selected_option,
+                # Use 0 as a sentinel value for unanswered questions, since valid answers are 1-4
+                selected_option=answer.selected_option if answer.selected_option is not None else 0,
                 is_correct=is_correct,
             )
         )
@@ -140,11 +142,13 @@ def get_user_quiz_attempt_results(quiz_id: int):
     if not quiz_signup:
         return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
 
+    # If the quiz is active then don't allow the user to see the results
+    if quiz_signup.quiz.is_active:
+        return jsonify({"message": "Quiz is still active"}), HTTPStatus.FORBIDDEN
+
     # Get score, correct answers and questions
     score: Score | None = (
-        Score.query.filter_by(quiz_id=quiz_id, user_id=current_user_id)
-        .order_by(Score.timestamp.desc())
-        .first()
+        Score.query.filter_by(quiz_id=quiz_id, user_id=current_user_id).order_by(Score.timestamp.desc()).first()
     )
     if not score:
         return jsonify({"message": "Quiz not attempted or User did not sign up for the quiz"}), HTTPStatus.NOT_FOUND
@@ -154,8 +158,9 @@ def get_user_quiz_attempt_results(quiz_id: int):
     question_attempts_list = [
         {
             "question_statement": qa.question.question_statement,
-            "correct_answer": qa.question.correct_option,
-            "user_answer": qa.selected_option,
+            "correct_option": qa.question.correct_option,
+            # "user_answer": qa.selected_option,
+            "user_answer": qa.selected_option if qa.selected_option != 0 else None,
             "is_correct": qa.is_correct,
             "points": qa.question.points,
             "option1": qa.question.option1,
@@ -184,9 +189,7 @@ def get_user_quiz_score_details(quiz_id: int):
     # Get the latest score for the quiz, sort by timestamp in descending order
     # TODO: Later only allow user to take the quiz once to avoid multiple attempts
     score: Score | None = (
-        Score.query.filter_by(quiz_id=quiz_id, user_id=current_user_id)
-        .order_by(Score.timestamp.desc())
-        .first()
+        Score.query.filter_by(quiz_id=quiz_id, user_id=current_user_id).order_by(Score.timestamp.desc()).first()
     )
     if not score:
         return jsonify({"message": "Quiz not attempted or User did not sign up for the quiz"}), HTTPStatus.NOT_FOUND
@@ -194,7 +197,7 @@ def get_user_quiz_score_details(quiz_id: int):
     # get quiz name, total quiz score, total user score, time duration, date of quiz
     response = {
         "quiz_name": score.quiz.name,
-        "date_of_quiz": score.quiz.date_of_quiz,
+        "date_of_quiz": score.quiz.date_of_quiz.isoformat(),
         "time_duration": score.quiz.time_duration,
         "user_score": score.user_score,
         "total_quiz_score": score.quiz.total_quiz_score,

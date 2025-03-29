@@ -3,7 +3,7 @@
 
 <head>
     <script src="/js/components/layout.js"></script>
-    <script>document.write(getHead('Quiz Results'));</script>
+    <script>document.write(getHead('Detailed Quiz Results'));</script>
     <link rel="stylesheet" href="/css/quiz-pages.css">
     <style>
         .result-summary {
@@ -21,6 +21,64 @@
         .quiz-details {
             font-size: 0.9rem;
             color: #6c757d;
+        }
+
+        .question-result {
+            margin-bottom: 1.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #fff;
+        }
+
+        .question-result .card-header {
+            padding: 12px 15px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .option-label {
+            display: block;
+            padding: 10px 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background-color: #fff;
+        }
+
+        /* Styling for options */
+        .option-correct {
+            border-color: #28a745;
+            background-color: rgba(40, 167, 69, 0.15);
+        }
+
+        .option-incorrect {
+            border-color: #dc3545;
+            background-color: rgba(220, 53, 69, 0.15);
+        }
+
+        /* Add a badge to clearly mark the correct answer */
+        .correct-answer-badge {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        /* Add a badge to clearly mark the user's answer */
+        .user-answer-badge {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 8px;
+            vertical-align: middle;
         }
 
         .result-actions {
@@ -46,9 +104,12 @@
         <script src="/js/components/ui.js"></script>
         <script>document.write(getAlertContainer());</script>
 
-        <!-- Page Header -->
+        <!-- Page Header with Back Button -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 id="quiz-title">Quiz Results</h2>
+            <h2 id="quiz-title">Detailed Quiz Results</h2>
+            <a href="/pages/users/my-quizzes.html" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i> Back to My Quizzes
+            </a>
         </div>
 
         <!-- Loading State -->
@@ -82,14 +143,14 @@
                 </div>
             </div>
 
+            <!-- Questions Section -->
+            <h3 class="mb-3">Questions</h3>
+            <div id="questions-container"></div>
+
             <!-- Result Actions -->
             <div class="result-actions">
                 <div class="row justify-content-center">
                     <div class="col-md-8 text-center">
-                        <p class="text-muted mb-3">
-                            <i class="fas fa-info-circle me-1"></i>
-                            You can view detailed results with questions and answers in the "My Quizzes" section.
-                        </p>
                         <div class="d-grid gap-2 d-md-block">
                             <a href="/pages/users/quizzes.html" class="btn btn-primary me-md-2">Browse Quizzes</a>
                             <a href="/pages/users/my-quizzes.html" class="btn btn-outline-primary">My Quizzes</a>
@@ -102,7 +163,7 @@
 
     <script>document.write(getFooter());</script>
     <script>document.write(getScripts());</script>
-    <script type="module" src="/js/pages/users/quiz-result.js"></script>
+    <script type="module" src="/js/pages/users/quiz-result-detailed.js"></script>
 </body>
 
 </html>

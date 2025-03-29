@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('My Quizzes'));</script>
+    <link rel="stylesheet" href="/css/quiz-pages.css">
+    <style>
+        .quiz-card {
+            transition: transform 0.2s;
+            margin-bottom: 1.5rem;
+            height: 100%;
+        }
+
+        .quiz-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .badge-upcoming {
+            background-color: #17a2b8;
+        }
+
+        .badge-active {
+            background-color: #28a745;
+        }
+
+        .badge-completed {
+            background-color: #6c757d;
+        }
+
+        .quiz-date {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .quiz-details {
+            font-size: 0.85rem;
+        }
+
+        .quiz-score {
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .quiz-score.good {
+            color: #28a745;
+        }
+
+        .quiz-score.average {
+            color: #ffc107;
+        }
+
+        .quiz-score.poor {
+            color: #dc3545;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <script src="/js/components/navigation.js"></script>
+            <script>
+                const userName = localStorage.getItem('userName');
+                document.write(getUserNav(userName));
+            </script>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>My Quizzes</h2>
+            <a href="/pages/users/quizzes.html" class="btn btn-outline-primary">
+                <i class="fas fa-search me-1"></i> Browse Available Quizzes
+            </a>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-container" class="text-center py-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading quizzes...</span>
+            </div>
+            <p class="mt-3">Loading your quizzes...</p>
+        </div>
+
+        <!-- No Quizzes State -->
+        <div id="no-quizzes-container" class="text-center py-5 d-none">
+            <div class="alert alert-info">
+                <h4 class="alert-heading"><i class="fas fa-info-circle me-2"></i>No Quizzes Found</h4>
+                <p>You haven't signed up for any quizzes yet.</p>
+                <hr>
+                <p class="mb-0">
+                    <a href="/pages/users/quizzes.html" class="btn btn-primary">Browse Available Quizzes</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Quiz Categories Accordion -->
+        <div id="quiz-content" class="d-none">
+            <div class="accordion" id="quizAccordion">
+                <!-- Active Quizzes -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="activeHeading">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#activeCollapse" aria-expanded="true" aria-controls="activeCollapse">
+                            <span class="badge badge-active me-2 text-white">●</span>
+                            Active Quizzes
+                        </button>
+                    </h2>
+                    <div id="activeCollapse" class="accordion-collapse collapse show" aria-labelledby="activeHeading"
+                        data-bs-parent="#quizAccordion">
+                        <div class="accordion-body">
+                            <div id="active-quizzes-container" class="row">
+                                <!-- Active quizzes will be loaded here -->
+                                <div class="col-12 no-quizzes">
+                                    <p class="text-muted">No active quizzes found. Check back later for new quizzes!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Quizzes -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="upcomingHeading">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#upcomingCollapse" aria-expanded="false" aria-controls="upcomingCollapse">
+                            <span class="badge badge-upcoming me-2 text-white">●</span>
+                            Upcoming Quizzes
+                        </button>
+                    </h2>
+                    <div id="upcomingCollapse" class="accordion-collapse collapse" aria-labelledby="upcomingHeading"
+                        data-bs-parent="#quizAccordion">
+                        <div class="accordion-body">
+                            <div id="upcoming-quizzes-container" class="row">
+                                <!-- Upcoming quizzes will be loaded here -->
+                                <div class="col-12 no-quizzes">
+                                    <p class="text-muted">No upcoming quizzes found. Check out available quizzes to sign
+                                        up!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Completed Quizzes -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="completedHeading">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#completedCollapse" aria-expanded="false" aria-controls="completedCollapse">
+                            <span class="badge badge-completed me-2 text-white">●</span>
+                            Completed Quizzes
+                        </button>
+                    </h2>
+                    <div id="completedCollapse" class="accordion-collapse collapse" aria-labelledby="completedHeading"
+                        data-bs-parent="#quizAccordion">
+                        <div class="accordion-body">
+                            <div id="completed-quizzes-container" class="row">
+                                <!-- Completed quizzes will be loaded here -->
+                                <div class="col-12 no-quizzes">
+                                    <p class="text-muted">No completed quizzes found. Take some quizzes to see your
+                                        results here!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+    <script type="module" src="/js/pages/users/my-quizzes.js"></script>
+</body>
+
+</html>
