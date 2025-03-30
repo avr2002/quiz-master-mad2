@@ -71,9 +71,6 @@ function getAdminNav(userName) {
                 <li class="nav-item">
                     <a class="nav-link" href="/pages/admin/users.html">Users</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/admin/reports.html">Reports</a>
-                </li>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">
