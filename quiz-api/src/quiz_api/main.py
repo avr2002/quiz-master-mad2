@@ -14,7 +14,6 @@ from quiz_api.models.database import db
 from quiz_api.routes.admin import admin_bp
 from quiz_api.routes.auth import auth_bp
 from quiz_api.routes.chapters import chapters_bp
-from quiz_api.routes.home import home_bp
 from quiz_api.routes.questions import questions_bp
 from quiz_api.routes.quiz_attempts import quiz_attempts_bp
 from quiz_api.routes.quiz_registration import user_quiz_bp
@@ -64,7 +63,6 @@ def create_app(test_config: Optional[dict | object] = None) -> Flask:
     CORS(app, resources={r"/*": {"origins": "*"}})
 
     # Register blueprints
-    app.register_blueprint(home_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(subjects_bp)

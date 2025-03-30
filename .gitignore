@@ -1,6 +1,9 @@
 # Python .gitignore template from
 # https://github.com/github/gitignore/blob/main/Python.gitignore
 
+# temporarily ignoring scripts folder
+quiz-api/scripts
+
 **/.DS_Store
 
 # Byte-compiled / optimized / DLL files
