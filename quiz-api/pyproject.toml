@@ -1,16 +1,13 @@
 [project]
 name = "quiz-api"
+version = "0.1.0"
+description = "Python package for quiz_api"
+readme = "README.md"
 authors = [
     { name = "Amit Vikram Raj", email = "21f3002226@ds.study.iitm.ac.in" },
 ]
-description = "Python package description for quiz_api"
-readme = "README.md"
-requires-python = ">=3.11"
-keywords = ["python"]
-license = { text = "MIT" }
-classifiers = ["Programming Language :: Python :: 3"]
+requires-python = ">=3.12"
 dependencies = [
-    'importlib-metadata; python_version>="3.11"',
     "sqlalchemy",
     # 'flask',
     "flask>=2.0.0,<3.0.0",
@@ -24,31 +21,13 @@ dependencies = [
     "gunicorn>=23.0.0",
     "flask-migrate>=4.1.0",
 ]
-dynamic = ["version"]
-
-[project.optional-dependencies]
-test = ["pytest", "pytest-cov"]
-release = ["build", "twine"]
-static-code-qa = [
-    "pre-commit",
-    "pylint",
-    "black",
-    "isort",
-    "flake8",
-    "flake8-docstrings",
-    "Flake8-pyproject",
-    "radon",
-]
-dev = ["quiz_api[test,release,static-code-qa]"]
-
-# docs: https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html#dynamic-metadata
-[tool.setuptools.dynamic]
-version = { file = "version.txt" }
 
 [build-system]
-# Minimum requirements for the build system to execute.
-requires = ["setuptools>=61.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+test = ["pytest>=7.4.4", "pytest-cov>=4.1.0"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
