@@ -7,7 +7,6 @@
 3. Create a virtual environment and install the dependencies
 
     ```bash
-    uv venv
     uv sync
 
     # OR
@@ -24,10 +23,9 @@
 
 ## TODO
 
-- [ ] Add Pydantic Validation Tests
-- [ ] Update OpenAPI schema and docs, if required
+- [ ] **TESTs** are out of sync with the code. Update the tests and add tests for new endpoints
+- [ ] Update Pydantic Schemas
+- [ ] Update OpenAPI schema and docs
 - [ ] Dockerize the app
-- [ ] Update README.md with latest information
-- [ ] Centralize the run.sh & Makefile commands to the root directory
 - [ ] Find a better way to handle configs, `config.py` and environment variables in `.env` file
 - [ ] Better error handling and logging
