@@ -54,22 +54,18 @@ async function loadChapters() {
     }
 }
 
-async function handleSearch(event) {
+function handleSearch(event) {
     event.preventDefault();
 
     const query = document.getElementById('searchQuery').value.trim();
 
     if (!query) {
-        await loadChapters();
+        loadChapters();
         return;
     }
 
-    try {
-        const result = await searchChapters(currentSubjectId, query);
-        renderChapters(result.items);
-    } catch (error) {
-        showError(error.message);
-    }
+    // Redirect to the search page
+    window.location.href = `/pages/users/search/chapters.html?subject_id=${currentSubjectId}&q=${encodeURIComponent(query)}`;
 }
 
 function handleClearSearch(event) {

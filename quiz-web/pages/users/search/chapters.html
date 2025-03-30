@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('Search Chapters'));</script>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <script src="/js/components/navigation.js"></script>
+            <script>
+                const userName = localStorage.getItem('userName');
+                document.write(getUserNav(userName));
+            </script>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <!-- Breadcrumb Navigation -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/pages/users/list/subjects.html">Subjects</a></li>
+                <li class="breadcrumb-item"><a href="#" id="chapters-link">Chapters</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Search Results</li>
+            </ol>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 id="search-title">Search Chapters</h2>
+                <p id="subject-name" class="text-muted"></p>
+            </div>
+            <div>
+                <button class="btn btn-secondary me-2" id="back-btn">
+                    Back to All Chapters
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mb-4">
+            <form id="searchForm" method="get">
+                <input type="hidden" name="subject_id" id="subject-id-input">
+                <div class="input-group">
+                    <input type="text" id="searchInput" name="q" class="form-control" placeholder="Search chapters...">
+                    <button class="btn btn-outline-secondary" type="submit">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Search Results -->
+        <div class="card">
+            <div class="card-header">
+                <h5 id="resultsTitle">Results</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table" id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTableBody">
+                            <!-- Results will be loaded here -->
+                            <tr>
+                                <td colspan="3" class="text-center">
+                                    Select a subject and enter a search term
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+    <script type="module">
+        import { initChaptersSearch } from '/js/pages/users/search/chapters.js';
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', initChaptersSearch);
+    </script>
+</body>
+
+</html>

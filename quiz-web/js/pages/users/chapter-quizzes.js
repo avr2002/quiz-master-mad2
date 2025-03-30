@@ -69,27 +69,18 @@ async function loadQuizzes() {
     }
 }
 
-async function handleSearch(event) {
+function handleSearch(event) {
     event.preventDefault();
 
     const query = document.getElementById('searchQuery').value.trim();
 
     if (!query) {
-        await loadQuizzes();
+        loadQuizzes();
         return;
     }
 
-    try {
-        const result = await searchQuizzes(currentChapterId, query);
-
-        // Get user's signed up quizzes to check status
-        const userSignups = await getUserQuizzes();
-        const signedUpQuizIds = userSignups.map(signup => signup.quiz_id);
-
-        renderQuizzes(result.items, signedUpQuizIds);
-    } catch (error) {
-        showError(error.message);
-    }
+    // Redirect to the search page
+    window.location.href = `/pages/users/search/quizzes.html?chapter_id=${currentChapterId}&q=${encodeURIComponent(query)}`;
 }
 
 function handleClearSearch(event) {
