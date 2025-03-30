@@ -1,7 +1,7 @@
 import { getUserQuizzes } from '/js/api/quiz_registration.js';
 import { startQuizAttempt } from '/js/api/quiz_attempts.js';
 import { formatQuizDate, formatDuration } from '/js/api/quizzes.js';
-import { isAuthenticated, showError, showSuccess } from '/js/utils.js';
+import { isAuthenticated } from '/js/utils.js';
 
 // Initialize the page when the DOM is loaded
 document.addEventListener('DOMContentLoaded', initMyQuizzesPage);
@@ -31,6 +31,7 @@ async function initMyQuizzesPage() {
         const quizzes = await getUserQuizzes();
 
         // Show no quizzes container if no quizzes found
+        // If the response is 404, show a message
         if (!quizzes || quizzes.length === 0) {
             showNoQuizzesMessage();
             return;
