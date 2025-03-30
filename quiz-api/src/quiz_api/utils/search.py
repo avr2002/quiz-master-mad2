@@ -38,6 +38,8 @@ def search_subjects(query_text, limit=10, offset=0):
     except Exception as e:
         current_app.logger.error(f"Error searching subjects: {str(e)}")
         return []
+    finally:
+        db.session.close()
 
 
 def search_chapters(query_text, limit=10, offset=0):
@@ -75,6 +77,8 @@ def search_chapters(query_text, limit=10, offset=0):
     except Exception as e:
         current_app.logger.error(f"Error searching chapters: {str(e)}")
         return []
+    finally:
+        db.session.close()
 
 
 def search_users(query_text, limit=10, offset=0):
@@ -112,6 +116,8 @@ def search_users(query_text, limit=10, offset=0):
     except Exception as e:
         current_app.logger.error(f"Error searching users: {str(e)}")
         return []
+    finally:
+        db.session.close()
 
 
 def search_quizzes(query_text, limit=10, offset=0, chapter_id=None):
@@ -158,3 +164,5 @@ def search_quizzes(query_text, limit=10, offset=0, chapter_id=None):
     except Exception as e:
         current_app.logger.error(f"Error searching quizzes: {str(e)}")
         return []
+    finally:
+        db.session.close()

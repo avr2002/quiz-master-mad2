@@ -33,6 +33,8 @@ def setup_fts():
         db.session.rollback()
         current_app.logger.error(f"Error setting up FTS: {str(e)}")
         raise
+    finally:
+        db.session.close()
 
 
 def setup_subjects_fts():
@@ -85,7 +87,7 @@ def setup_subjects_fts():
         )
 
         # Rebuild FTS index (optional, if you need a full refresh)
-        db.session.execute(text("INSERT INTO subjects_fts(subjects_fts) VALUES ('rebuild');"))
+        # db.session.execute(text("INSERT INTO subjects_fts(subjects_fts) VALUES('rebuild');"))
 
         db.session.commit()
         current_app.logger.info("Subjects FTS setup completed successfully")
@@ -93,6 +95,8 @@ def setup_subjects_fts():
         db.session.rollback()
         current_app.logger.error(f"Error setting up subjects FTS: {str(e)}")
         raise
+    finally:
+        db.session.close()
 
 
 def setup_chapters_fts():
@@ -145,7 +149,7 @@ def setup_chapters_fts():
         )
 
         # More efficient index refresh
-        db.session.execute(text("INSERT INTO chapters_fts(chapters_fts) VALUES ('rebuild');"))
+        # db.session.execute(text("INSERT INTO chapters_fts(chapters_fts) VALUES('rebuild');"))
 
         db.session.commit()
         current_app.logger.info("Chapters FTS setup completed successfully")
@@ -153,6 +157,8 @@ def setup_chapters_fts():
         db.session.rollback()
         current_app.logger.error(f"Error setting up chapters FTS: {str(e)}")
         raise
+    finally:
+        db.session.close()
 
 
 def setup_users_fts():
@@ -206,7 +212,7 @@ def setup_users_fts():
         )
 
         # Rebuild FTS index (optional, if you need a full refresh)
-        db.session.execute(text("INSERT INTO users_fts(users_fts) VALUES ('rebuild');"))
+        # db.session.execute(text("INSERT INTO users_fts(users_fts) VALUES('rebuild');"))
 
         db.session.commit()
         current_app.logger.info("Users FTS setup completed successfully")
@@ -214,6 +220,8 @@ def setup_users_fts():
         db.session.rollback()
         current_app.logger.error(f"Error setting up users FTS: {str(e)}")
         raise
+    finally:
+        db.session.close()
 
 
 def setup_quizzes_fts():
@@ -238,7 +246,7 @@ def setup_quizzes_fts():
             CREATE TRIGGER IF NOT EXISTS quizzes_ai AFTER INSERT ON quizzes
             BEGIN
                 INSERT INTO quizzes_fts(rowid, name, remarks)
-                VALUES (new.id, new.name, new.remarks);
+                VALUES (new.id, new.name, COALESCE(new.remarks, ''));
             END;
         """)
         )
@@ -260,13 +268,13 @@ def setup_quizzes_fts():
             BEGIN
                 DELETE FROM quizzes_fts WHERE rowid = old.id;
                 INSERT INTO quizzes_fts(rowid, name, remarks)
-                VALUES (new.id, new.name, new.remarks);
+                VALUES (new.id, new.name, COALESCE(new.remarks, ''));
             END;
         """)
         )
 
         # Rebuild FTS index (optional, if you need a full refresh)
-        db.session.execute(text("INSERT INTO quizzes_fts(quizzes_fts) VALUES ('rebuild');"))
+        db.session.execute(text("INSERT INTO quizzes_fts(quizzes_fts) VALUES('rebuild');"))
 
         db.session.commit()
         current_app.logger.info("Quizzes FTS setup completed successfully")
@@ -274,3 +282,5 @@ def setup_quizzes_fts():
         db.session.rollback()
         current_app.logger.error(f"Error setting up quizzes FTS: {str(e)}")
         raise
+    finally:
+        db.session.close()

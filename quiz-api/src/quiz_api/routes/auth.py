@@ -13,7 +13,7 @@ from quiz_api.models.models import User
 from quiz_api.models.schemas import UserSchema, UserUpdateSchema
 from quiz_api.utils import add_token_to_blacklist
 
-JWT_EXPIRATION_TIME_IN_HOURS = 1
+JWT_EXPIRATION_TIME_IN_HOURS = 10
 
 auth_bp: Blueprint = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -35,33 +35,36 @@ def register() -> ResponseReturnValue:
         json: A JSON response indicating the success of the registration.
 
     """
-    user_data = UserSchema(**request.get_json())
+    try:
+        user_data = UserSchema(**request.get_json())
 
-    # Prevent admin registration through API
-    if user_data.role == "admin":
-        return jsonify({"message": "Admin registration not allowed"}), HTTPStatus.FORBIDDEN
+        # Prevent admin registration through API
+        if user_data.role == "admin":
+            return jsonify({"message": "Admin registration not allowed"}), HTTPStatus.FORBIDDEN
 
-    # Check both email and username uniqueness
-    if User.query.filter_by(email=user_data.email).first():
-        return jsonify({"message": "Email already registered"}), HTTPStatus.BAD_REQUEST
+        # Check both email and username uniqueness
+        if User.query.filter_by(email=user_data.email).first():
+            return jsonify({"message": "Email already registered"}), HTTPStatus.BAD_REQUEST
 
-    if User.query.filter_by(username=user_data.username).first():
-        return jsonify({"message": "Username already taken"}), HTTPStatus.BAD_REQUEST
+        if User.query.filter_by(username=user_data.username).first():
+            return jsonify({"message": "Username already taken"}), HTTPStatus.BAD_REQUEST
 
-    hashed_password = generate_password_hash(user_data.password, method="pbkdf2:sha256")
-    new_user = User(
-        username=user_data.username,
-        password=hashed_password,
-        full_name=user_data.full_name,
-        dob=user_data.dob,  # date is already parsed in pydantic UserSchema
-        email=user_data.email,
-        role=user_data.role,  # default role is "user"
-    )
+        hashed_password = generate_password_hash(user_data.password, method="pbkdf2:sha256")
+        new_user = User(
+            username=user_data.username,
+            password=hashed_password,
+            full_name=user_data.full_name,
+            dob=user_data.dob,  # date is already parsed in pydantic UserSchema
+            email=user_data.email,
+            role=user_data.role,  # default role is "user"
+        )
 
-    db.session.add(new_user)
-    db.session.commit()
+        db.session.add(new_user)
+        db.session.commit()
 
-    return jsonify({"message": "User registered successfully"}), HTTPStatus.CREATED
+        return jsonify({"message": "User registered successfully"}), HTTPStatus.CREATED
+    finally:
+        db.session.close()
 
 
 @auth_bp.route("/login", methods=[HTTPMethod.POST])
@@ -78,62 +81,68 @@ def login() -> ResponseReturnValue:
         json: A JSON response indicating the success of the login.
 
     """
-    data = request.get_json()
-    identifier = data.get("email") or data.get("username")
-    if not identifier or not data.get("password"):
-        return jsonify({"message": "Email/username and password are required"}), HTTPStatus.BAD_REQUEST
+    try:
+        data = request.get_json()
+        identifier = data.get("email") or data.get("username")
+        if not identifier or not data.get("password"):
+            return jsonify({"message": "Email/username and password are required"}), HTTPStatus.BAD_REQUEST
 
-    # Try to find user by email or username
-    user = User.query.filter((User.email == identifier) | (User.username == identifier)).first()
+        # Try to find user by email or username
+        user = User.query.filter((User.email == identifier) | (User.username == identifier)).first()
 
-    if not user or not check_password_hash(user.password, data["password"]):
-        return jsonify({"message": "Invalid credentials"}), HTTPStatus.UNAUTHORIZED
+        if not user or not check_password_hash(user.password, data["password"]):
+            return jsonify({"message": "Invalid credentials"}), HTTPStatus.UNAUTHORIZED
 
-    # Convert user.id to string otherwise I get "Subject must be a string" error while logging
-    # in `get_current_user` due to @jwt_required()
-    # Flask-JWT-Extended expects the identity to be a string, but we were passing user.id as an integer.
-    access_token = create_access_token(
-        identity=str(user.id),
-        expires_delta=datetime.timedelta(hours=JWT_EXPIRATION_TIME_IN_HOURS),
-    )
+        # Convert user.id to string otherwise I get "Subject must be a string" error while logging
+        # in `get_current_user` due to @jwt_required()
+        # Flask-JWT-Extended expects the identity to be a string, but we were passing user.id as an integer.
+        access_token = create_access_token(
+            identity=str(user.id),
+            expires_delta=datetime.timedelta(hours=JWT_EXPIRATION_TIME_IN_HOURS),
+        )
 
-    response = {
-        "access_token": access_token,
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "username": user.username,
-            "full_name": user.full_name,
-            "role": user.role,
-        },
-    }
-    return jsonify(response), HTTPStatus.OK
+        response = {
+            "access_token": access_token,
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "full_name": user.full_name,
+                "role": user.role,
+            },
+        }
+        return jsonify(response), HTTPStatus.OK
+    finally:
+        db.session.close()
 
 
 @auth_bp.route("/me", methods=[HTTPMethod.GET])
 @jwt_required()
 def get_current_user() -> ResponseReturnValue:
     """Get current user information."""
-    current_user_id = int(get_jwt_identity())
-    current_user: User | None = db.session.get(User, current_user_id)
+    try:
+        current_user_id = int(get_jwt_identity())
+        current_user: User | None = db.session.get(User, current_user_id)
 
-    if not current_user:
-        return jsonify({"message": "User not found"}), HTTPStatus.NOT_FOUND
+        if not current_user:
+            return jsonify({"message": "User not found"}), HTTPStatus.NOT_FOUND
 
-    return (
-        jsonify(
-            {
-                "id": current_user.id,
-                "username": current_user.username,
-                "email": current_user.email,
-                "full_name": current_user.full_name,
-                "role": current_user.role,
-                "dob": current_user.dob.strftime("%d/%m/%Y") if current_user.dob else None,
-                "joined_at": current_user.joined_at.isoformat(),
-            }
-        ),
-        HTTPStatus.OK,
-    )
+        return (
+            jsonify(
+                {
+                    "id": current_user.id,
+                    "username": current_user.username,
+                    "email": current_user.email,
+                    "full_name": current_user.full_name,
+                    "role": current_user.role,
+                    "dob": current_user.dob.strftime("%d/%m/%Y") if current_user.dob else None,
+                    "joined_at": current_user.joined_at.isoformat(),
+                }
+            ),
+            HTTPStatus.OK,
+        )
+    finally:
+        db.session.close()
 
 
 @auth_bp.route("/me", methods=[HTTPMethod.PATCH])
@@ -166,6 +175,11 @@ def update_profile() -> ResponseReturnValue:
 
     except ValueError as e:
         return jsonify({"message": str(e)}), HTTPStatus.BAD_REQUEST
+    except Exception as e:
+        db.session.rollback()
+        raise
+    finally:
+        db.session.close()
 
 
 @auth_bp.route("/logout", methods=[HTTPMethod.GET])

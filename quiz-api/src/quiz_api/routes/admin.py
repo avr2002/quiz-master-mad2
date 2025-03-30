@@ -18,15 +18,50 @@ admin_bp = Blueprint("admin", __name__, url_prefix="/admin/users")
 @jwt_required()
 def get_all_users() -> ResponseReturnValue:
     """Get all users (Admin only)."""
-    current_user_id = int(get_jwt_identity())
-    current_user: User | None = db.session.get(User, current_user_id)
-    if not current_user or current_user.role != "admin":
-        return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
+    try:
+        current_user_id = int(get_jwt_identity())
+        current_user: User | None = db.session.get(User, current_user_id)
+        if not current_user or current_user.role != "admin":
+            return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
 
-    users = User.query.all()
-    return (
-        jsonify(
-            [
+        users = User.query.all()
+        return (
+            jsonify(
+                [
+                    {
+                        "id": user.id,
+                        "username": user.username,
+                        "email": user.email,
+                        "full_name": user.full_name,
+                        "role": user.role,
+                        "dob": user.dob.strftime("%d/%m/%Y") if user.dob else None,
+                        "joined_at": user.joined_at.isoformat(),
+                    }
+                    for user in users
+                ]
+            ),
+            HTTPStatus.OK,
+        )
+    finally:
+        db.session.close()
+
+
+@admin_bp.route("/<int:user_id>", methods=[HTTPMethod.GET])
+@jwt_required()
+def get_user(user_id: int) -> ResponseReturnValue:
+    """Get a specific user's details (Admin only)."""
+    try:
+        current_user_id = int(get_jwt_identity())
+        current_user: User | None = db.session.get(User, current_user_id)
+        if not current_user or current_user.role != "admin":
+            return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
+
+        user: User | None = db.session.get(User, user_id)
+        if not user:
+            return jsonify({"message": "User not found"}), HTTPStatus.NOT_FOUND
+
+        return (
+            jsonify(
                 {
                     "id": user.id,
                     "username": user.username,
@@ -36,58 +71,32 @@ def get_all_users() -> ResponseReturnValue:
                     "dob": user.dob.strftime("%d/%m/%Y") if user.dob else None,
                     "joined_at": user.joined_at.isoformat(),
                 }
-                for user in users
-            ]
-        ),
-        HTTPStatus.OK,
-    )
-
-
-@admin_bp.route("/<int:user_id>", methods=[HTTPMethod.GET])
-@jwt_required()
-def get_user(user_id: int) -> ResponseReturnValue:
-    """Get a specific user's details (Admin only)."""
-    current_user_id = int(get_jwt_identity())
-    current_user: User | None = db.session.get(User, current_user_id)
-    if not current_user or current_user.role != "admin":
-        return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
-
-    user: User | None = db.session.get(User, user_id)
-    if not user:
-        return jsonify({"message": "User not found"}), HTTPStatus.NOT_FOUND
-
-    return (
-        jsonify(
-            {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "full_name": user.full_name,
-                "role": user.role,
-                "dob": user.dob.strftime("%d/%m/%Y") if user.dob else None,
-                "joined_at": user.joined_at.isoformat(),
-            }
-        ),
-        HTTPStatus.OK,
-    )
+            ),
+            HTTPStatus.OK,
+        )
+    finally:
+        db.session.close()
 
 
 @admin_bp.route("/<int:user_id>", methods=[HTTPMethod.DELETE])
 @jwt_required()
 def delete_user(user_id: int) -> ResponseReturnValue:
     """Delete a user (Admin only)."""
-    current_user_id = int(get_jwt_identity())
-    current_user: User | None = db.session.get(User, current_user_id)
-    if not current_user or current_user.role != "admin":
-        return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
+    try:
+        current_user_id = int(get_jwt_identity())
+        current_user: User | None = db.session.get(User, current_user_id)
+        if not current_user or current_user.role != "admin":
+            return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
 
-    user: User | None = db.session.get(User, user_id)
-    if not user:
-        return jsonify({"message": "User not found"}), HTTPStatus.NOT_FOUND
+        user: User | None = db.session.get(User, user_id)
+        if not user:
+            return jsonify({"message": "User not found"}), HTTPStatus.NOT_FOUND
 
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({"message": "User deleted successfully"}), HTTPStatus.OK
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({"message": "User deleted successfully"}), HTTPStatus.OK
+    finally:
+        db.session.close()
 
 
 @admin_bp.route("/<int:user_id>", methods=[HTTPMethod.PATCH])
@@ -124,60 +133,65 @@ def update_user(user_id: int) -> ResponseReturnValue:
 
     except ValueError as e:
         return jsonify({"message": str(e)}), HTTPStatus.BAD_REQUEST
+    finally:
+        db.session.close()
 
 
 @admin_bp.route("/search", methods=[HTTPMethod.GET])
 @jwt_required()
 def search_users_endpoint():
     """Search users (Admin only)."""
-    # Check if user is admin
-    current_user_id = int(get_jwt_identity())
-    current_user: User | None = db.session.get(User, current_user_id)
-    if not current_user or current_user.role != "admin":
-        return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
+    try:
+        # Check if user is admin
+        current_user_id = int(get_jwt_identity())
+        current_user: User | None = db.session.get(User, current_user_id)
+        if not current_user or current_user.role != "admin":
+            return jsonify({"message": "Unauthorized"}), HTTPStatus.FORBIDDEN
 
-    search_params = SearchSchema(**request.args)
-    query = search_params.q
+        search_params = SearchSchema(**request.args)
+        query = search_params.q
 
-    if not query:
-        # Return all users if no query
-        users = User.query.limit(search_params.limit).offset(search_params.offset).all()
-        users_list = [
-            {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "full_name": user.full_name,
-                "role": user.role,
-                "dob": user.dob.strftime("%d/%m/%Y") if user.dob else None,
-                "joined_at": user.joined_at.isoformat(),
-            }
-            for user in users
-        ]
-    else:
-        # Use FTS to search
-        results = search_users(query, limit=search_params.limit, offset=search_params.offset)
+        if not query:
+            # Return all users if no query
+            users = User.query.limit(search_params.limit).offset(search_params.offset).all()
+            users_list = [
+                {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "full_name": user.full_name,
+                    "role": user.role,
+                    "dob": user.dob.strftime("%d/%m/%Y") if user.dob else None,
+                    "joined_at": user.joined_at.isoformat(),
+                }
+                for user in users
+            ]
+        else:
+            # Use FTS to search
+            results = search_users(query, limit=search_params.limit, offset=search_params.offset)
 
-        # Format results
-        users_list = [
-            {
-                "id": row[0],
-                "username": row[1],
-                "full_name": row[3],  # idx 2 is password, idx 3 is full name
-                "dob": row[4] if isinstance(row[4], str) else row[4].strftime("%d/%m/%Y") if row[4] else None,
-                "email": row[5],
-                "role": row[6],
-                "joined_at": row[7] if isinstance(row[7], str) else row[7].isoformat() if row[7] else None,
-            }
-            for row in results
-        ]
+            # Format results
+            users_list = [
+                {
+                    "id": row[0],
+                    "username": row[1],
+                    "full_name": row[3],  # idx 2 is password, idx 3 is full name
+                    "dob": row[4] if isinstance(row[4], str) else row[4].strftime("%d/%m/%Y") if row[4] else None,
+                    "email": row[5],
+                    "role": row[6],
+                    "joined_at": row[7] if isinstance(row[7], str) else row[7].isoformat() if row[7] else None,
+                }
+                for row in results
+            ]
 
-    # Return with metadata
-    response = {
-        "items": users_list,
-        "total": len(users_list),
-        "limit": search_params.limit,
-        "offset": search_params.offset,
-    }
+        # Return with metadata
+        response = {
+            "items": users_list,
+            "total": len(users_list),
+            "limit": search_params.limit,
+            "offset": search_params.offset,
+        }
 
-    return jsonify(response), HTTPStatus.OK
+        return jsonify(response), HTTPStatus.OK
+    finally:
+        db.session.close()

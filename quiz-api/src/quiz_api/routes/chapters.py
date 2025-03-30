@@ -75,7 +75,7 @@ def create_chapter(subject_id: int):
     except ValueError as e:
         return jsonify({"message": str(e)}), HTTPStatus.BAD_REQUEST
     except Exception as e:
-        raise e
+        raise
     finally:
         db.session.close()
 
@@ -104,7 +104,7 @@ def get_subject_chapters(subject_id: int):
 
         return jsonify(chapters_list), HTTPStatus.OK
     except Exception as e:
-        raise e
+        raise
     finally:
         db.session.close()
 
@@ -127,7 +127,7 @@ def get_chapter(chapter_id: int):
         }
         return jsonify(response), HTTPStatus.OK
     except Exception as e:
-        raise e
+        raise
     finally:
         db.session.close()
 
@@ -161,7 +161,7 @@ def update_chapter(chapter_id: int):
     except ValueError as e:
         return jsonify({"message": str(e)}), HTTPStatus.BAD_REQUEST
     except Exception as e:
-        raise e
+        raise
     finally:
         db.session.close()
 
@@ -185,7 +185,7 @@ def delete_chapter(chapter_id: int):
         db.session.commit()
         return jsonify({"message": "Chapter deleted successfully"}), HTTPStatus.OK
     except Exception as e:
-        raise e
+        raise
     finally:
         db.session.close()
 
@@ -249,6 +249,6 @@ def search_subject_chapters(subject_id: int):
 
         return jsonify(response), HTTPStatus.OK
     except Exception as e:
-        raise e
+        raise
     finally:
         db.session.close()

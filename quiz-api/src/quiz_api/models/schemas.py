@@ -1,4 +1,22 @@
-"""Pydantic Schemas for quiz API."""
+"""
+Pydantic Schemas for quiz API.
+
+Timezone Handling Strategy:
+---------------------------
+1. Frontend:
+   - User inputs dates in their local timezone
+   - Frontend converts local datetime to UTC ISO format before sending to API
+   - Frontend converts UTC dates from API back to local timezone for display
+
+2. Backend:
+   - Receives dates in UTC ISO format from frontend
+   - Stores all dates in database with UTC timezone information
+   - Returns dates in ISO format with timezone information to frontend
+   - Uses timezone-aware datetime objects for all datetime operations
+
+This consistent approach ensures dates are correctly interpreted regardless of
+the user's timezone or the server's timezone.
+"""
 
 from datetime import date, datetime, timedelta, timezone
 from typing import List, Optional
@@ -118,11 +136,15 @@ class QuizSchema(BaseModel):
     @field_validator("date_of_quiz", mode="after")
     @classmethod
     def convert_to_utc(cls, dt: datetime) -> datetime:
-        """Convert a naive datetime to UTC."""
+        """Convert a datetime to UTC with explicit timezone information."""
+        # If datetime is naive (no timezone info)
         if dt.tzinfo is None:
-            # Assume naive datetime is in local time — convert to UTC
-            return dt.astimezone().astimezone(timezone.utc)
-        # If datetime is already timezone-aware, just convert to UTC
+            # We assume frontend has sent local time in ISO format
+            # First, make it timezone-aware using UTC (dt is already in UTC from frontend conversion)
+            dt = dt.replace(tzinfo=timezone.utc)
+            return dt
+
+        # If datetime already has timezone info, normalize to UTC
         return dt.astimezone(timezone.utc)
 
     # @property
@@ -140,6 +162,23 @@ class QuizUpdateSchema(BaseModel):
     date_of_quiz: datetime | None = None
     time_duration: str | None = Field(None, pattern=r"^\d{2}:\d{2}$")  # HH:MM format
     remarks: str | None = None
+
+    @field_validator("date_of_quiz", mode="after")
+    @classmethod
+    def convert_to_utc(cls, dt: datetime | None) -> datetime | None:
+        """Convert a datetime to UTC with explicit timezone information."""
+        if dt is None:
+            return None
+
+        # If datetime is naive (no timezone info)
+        if dt.tzinfo is None:
+            # We assume frontend has sent local time in ISO format
+            # First, make it timezone-aware using UTC (dt is already in UTC from frontend conversion)
+            dt = dt.replace(tzinfo=timezone.utc)
+            return dt
+
+        # If datetime already has timezone info, normalize to UTC
+        return dt.astimezone(timezone.utc)
 
 
 class QuestionSchema(BaseModel):
