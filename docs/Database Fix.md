@@ -1,3 +1,35 @@
+# Database Migration Fix
+
+```python
+# Run ./run.sh db init
+# Add this to env.py
+
+# MANUALLY ADDED "include_object" FUNCTION TO EXCLUDE FTS TABLES FROM MIGRATIONS
+def include_object(object, name, type_, reflected, compare_to):
+    """Exclude FTS tables from migrations."""
+    if type_ == "table" and (
+        name.endswith("_fts")
+        or name.endswith("_fts_config")
+        or name.endswith("_fts_data")
+        or name.endswith("_fts_idx")
+        or name.endswith("_fts_docsize")
+    ):
+        # Skip FTS tables and their associated tables
+        return False
+    return True
+
+# pass this function to EnvironmentContext in both online and offline contexts
+context.configure(
+    include_object=include_object,
+    target_metadata=target_metadata,
+)
+
+
+# Run ./run.sh db migrate "Initial migration"
+# Run ./run.sh db upgrade
+```
+
+
 # Understanding SQLite Database Corruption
 
 ## What Happened?
