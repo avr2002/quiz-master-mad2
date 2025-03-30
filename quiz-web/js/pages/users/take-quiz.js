@@ -1,4 +1,5 @@
 import { startQuizAttempt, submitQuizAnswers } from '/js/api/quiz_attempts.js';
+import { isAuthenticated, showError, showSuccess } from '/js/utils.js';
 import QuizTimer from '/js/timer.js';
 
 // Quiz state

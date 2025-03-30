@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('Chapters'));</script>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <script src="/js/components/navigation.js"></script>
+            <script>
+                const userName = localStorage.getItem('userName');
+                document.write(getUserNav(userName));
+            </script>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <!-- Page Header with Breadcrumbs -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/pages/users/list/subjects.html">Subjects</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Chapters</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Chapters <span id="subjectName" class="text-muted"></span></h2>
+        </div>
+
+        <!-- Simple Search Form -->
+        <div class="mb-4">
+            <form id="searchForm">
+                <div class="input-group">
+                    <input type="text" name="q" id="searchQuery" class="form-control" placeholder="Search chapters...">
+                    <button class="btn btn-outline-secondary" type="submit">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Chapters Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table" id="chaptersTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="chaptersTableBody">
+                            <!-- Chapters will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noResults" class="alert alert-info d-none">
+                    No chapters found. <a href="#" id="clearSearch">Clear search</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+    <script type="module">
+        import { initChaptersList } from '/js/pages/users/chapters.js';
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', initChaptersList);
+    </script>
+</body>
+
+</html>

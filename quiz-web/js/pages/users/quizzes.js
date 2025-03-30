@@ -1,5 +1,6 @@
 import { getOngoingQuizzes, getUpcomingQuizzes, getPastQuizzes, formatQuizDate, formatDuration } from '/js/api/quizzes.js';
 import { signupForQuiz, getUserQuizzes } from '/js/api/quiz_registration.js';
+import { isAuthenticated, showError, showSuccess } from '/js/utils.js';
 
 // Initialize the quizzes dashboard
 export function initQuizzesDashboard() {

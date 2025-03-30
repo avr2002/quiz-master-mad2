@@ -1,6 +1,6 @@
 import { getQuizScore } from '/js/api/quiz_attempts.js';
 import { formatQuizDate, formatDuration } from '/js/api/quizzes.js';
-import { isAuthenticated } from '/js/utils.js';
+import { isAuthenticated, showError } from '/js/utils.js';
 
 // Initialize the results page
 document.addEventListener('DOMContentLoaded', initResultsPage);

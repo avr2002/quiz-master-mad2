@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/components/layout.js"></script>
+    <script>document.write(getHead('Quizzes'));</script>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <script src="/js/components/navigation.js"></script>
+            <script>
+                const userName = localStorage.getItem('userName');
+                document.write(getUserNav(userName));
+            </script>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <script src="/js/components/ui.js"></script>
+        <script>document.write(getAlertContainer());</script>
+
+        <!-- Page Header with Breadcrumbs -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/pages/users/list/subjects.html">Subjects</a></li>
+                <li class="breadcrumb-item"><a id="chaptersLink" href="#">Chapters</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Quizzes</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Quizzes <span id="chapterName" class="text-muted"></span></h2>
+        </div>
+
+        <!-- Simple Search Form -->
+        <div class="mb-4">
+            <form id="searchForm">
+                <div class="input-group">
+                    <input type="text" name="q" id="searchQuery" class="form-control" placeholder="Search quizzes...">
+                    <button class="btn btn-outline-secondary" type="submit">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Quizzes Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table" id="quizzesTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Date</th>
+                                <th>Duration</th>
+                                <th>Remarks</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quizzesTableBody">
+                            <!-- Quizzes will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noResults" class="alert alert-info d-none">
+                    No quizzes found. <a href="#" id="clearSearch">Clear search</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>document.write(getFooter());</script>
+    <script>document.write(getScripts());</script>
+    <script type="module">
+        import { initQuizzesList } from '/js/pages/users/chapter-quizzes.js';
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', initQuizzesList);
+    </script>
+</body>
+
+</html>

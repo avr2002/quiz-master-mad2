@@ -106,7 +106,7 @@ function getUserNav(userName) {
                     <a class="nav-link" href="/pages/users/my-quizzes.html">My Quizzes</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Subjects</a>
+                    <a class="nav-link" href="/pages/users/list/subjects.html">Subjects</a>
                 </li>
             </ul>
             <ul class="navbar-nav">

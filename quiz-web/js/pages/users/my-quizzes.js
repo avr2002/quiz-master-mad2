@@ -1,7 +1,7 @@
 import { getUserQuizzes } from '/js/api/quiz_registration.js';
 import { startQuizAttempt } from '/js/api/quiz_attempts.js';
 import { formatQuizDate, formatDuration } from '/js/api/quizzes.js';
-import { isAuthenticated } from '/js/utils.js';
+import { isAuthenticated, showError, showSuccess } from '/js/utils.js';
 
 // Initialize the page when the DOM is loaded
 document.addEventListener('DOMContentLoaded', initMyQuizzesPage);
